@@ -132,7 +132,7 @@ public class AgentRiskPatternService {
     }
 
     private int planSteps(AgentPracticeRequest request, int defaultValue) {
-        if (request == null || request.planSteps() <= 0) {
+        if (request == null || request.planSteps() == null || request.planSteps() <= 0) {
             return defaultValue;
         }
 
@@ -140,7 +140,7 @@ public class AgentRiskPatternService {
     }
 
     private int retryCount(AgentPracticeRequest request, int defaultValue) {
-        if (request == null || request.retryCount() <= 0) {
+        if (request == null || request.retryCount() == null || request.retryCount() <= 0) {
             return defaultValue;
         }
 
@@ -148,7 +148,7 @@ public class AgentRiskPatternService {
     }
 
     private int promptTokens(AgentPracticeRequest request, int defaultValue) {
-        if (request == null || request.promptTokens() <= 0) {
+        if (request == null || request.promptTokens() == null || request.promptTokens() <= 0) {
             return defaultValue;
         }
 
@@ -156,7 +156,7 @@ public class AgentRiskPatternService {
     }
 
     private int completionTokens(AgentPracticeRequest request, int defaultValue) {
-        if (request == null || request.completionTokens() <= 0) {
+        if (request == null || request.completionTokens() == null || request.completionTokens() <= 0) {
             return defaultValue;
         }
 
