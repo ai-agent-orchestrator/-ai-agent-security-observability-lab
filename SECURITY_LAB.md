@@ -21,6 +21,13 @@ username: admin
 password: admin123
 ```
 
+Non-admin test account:
+
+```text
+username: user
+password: user123
+```
+
 ## Test Flow
 
 ### 1. Public Health Check
@@ -80,6 +87,34 @@ Expected:
 
 ```text
 200 OK
+```
+
+### 4. Protected Metrics With Non-Admin Login
+
+Postman Authorization:
+
+```text
+Type: Basic Auth
+Username: user
+Password: user123
+```
+
+Request:
+
+```http
+GET http://localhost:8080/actuator/metrics
+```
+
+Expected:
+
+```text
+403 Forbidden
+```
+
+PromQL:
+
+```promql
+increase(security_access_denied_total[5m])
 ```
 
 ## Why This Matters
