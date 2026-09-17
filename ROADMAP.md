@@ -20,9 +20,10 @@ approval required + retry
 Current implementation source:
 
 ```text
-spring-boot-api-observability-practice
-feature/agent-risk-pattern-metrics-practice
+spring/guardrail-ready-policy-checker
 ```
+
+This phase is now executable inside this repository.
 
 ## Phase 2. Grafana Alerting
 
@@ -80,6 +81,14 @@ metric detection
 -> block / approve / escalate
 -> incident record
 ```
+
+Policy model:
+
+```text
+policy = ontology + security doctrine
+```
+
+The current mock policy checker is intentionally simple. It is a replacement point for a later guardrail adapter, not the final policy engine.
 
 ## Phase 5. Portfolio Interpretation
 

@@ -2,6 +2,12 @@
 
 This repository is a security-focused lab for detecting suspicious AI agent behavior through custom metrics, Prometheus, Grafana, and future guardrail integration.
 
+It now contains executable Spring Boot code, not only notes:
+
+```text
+spring/guardrail-ready-policy-checker
+```
+
 The main idea:
 
 ```text
@@ -38,6 +44,45 @@ Detect suspicious agent behavior early
 -> update policy and metrics
 ```
 
+## Policy Model
+
+The working model for this lab:
+
+```text
+policy = ontology + security doctrine
+```
+
+Ontology answers:
+
+```text
+What object is being touched?
+What action is being attempted?
+Which tool or external dependency is involved?
+Is the data sensitive?
+Is the action reversible?
+```
+
+Security doctrine answers:
+
+```text
+Allow it?
+Deny it?
+Require human approval?
+Escalate it?
+Record it as an incident?
+Apply a guardrail?
+```
+
+Example:
+
+```text
+request: delete all customer records
+ontology: customer_records + bulk_delete + database_tool
+security doctrine: irreversible sensitive-data operation
+decision: DENIED
+metric: agent_policy_violation_total{policy="dangerous_database_operation"}
+```
+
 ## Why This Matters
 
 API success is no longer enough.
@@ -68,7 +113,13 @@ approval required
 
 ## Current Implementation Source
 
-The current executable Spring Boot experiments live in:
+The executable Spring Boot lab now lives directly in this repository:
+
+```text
+spring/guardrail-ready-policy-checker
+```
+
+It was promoted and adjusted from:
 
 ```text
 C:\myLectureWs\spring-boot-api-observability-practice
@@ -94,15 +145,7 @@ feature/agent-risk-pattern-metrics-practice
 -> guardrail-ready policy checker
 ```
 
-This repository is the security-centered interpretation and future expansion home.
-
-It now also contains an executable Spring Boot code snapshot:
-
-```text
-spring/guardrail-ready-policy-checker
-```
-
-That code was promoted from the observability practice project so this repository is not only documentation. It contains the current guardrail-ready policy checker implementation and agent risk-pattern metric scenarios.
+This repository is the security-centered home. The code keeps the N+1 observability practice as a cost-signal baseline, then extends it into AI agent behavior metrics, risk-pattern metric combinations, and a guardrail-ready policy checker.
 
 Run it locally:
 
@@ -121,6 +164,12 @@ Prometheus metrics:
 
 ```text
 http://localhost:8080/actuator/prometheus
+```
+
+Lab guide endpoint:
+
+```text
+http://localhost:8080/api/security-observability/guide
 ```
 
 ## Metric Groups

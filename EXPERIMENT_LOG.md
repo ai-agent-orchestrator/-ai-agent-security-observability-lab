@@ -82,3 +82,27 @@ increase(agent_external_api_calls_total[5m])
 ```promql
 increase(agent_approval_required_total[5m])
 ```
+
+### Code Promotion
+
+The Spring Boot experiment code was promoted into this repository:
+
+```text
+spring/guardrail-ready-policy-checker
+```
+
+It includes:
+
+```text
+N+1 SQL count metrics
+agent behavior metrics
+agent risk-pattern endpoints
+guardrail-ready policy checker
+security observability guide endpoint
+```
+
+The current policy model:
+
+```text
+policy = ontology + security doctrine
+```
