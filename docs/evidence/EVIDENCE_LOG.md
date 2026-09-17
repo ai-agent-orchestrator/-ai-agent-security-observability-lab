@@ -28,3 +28,30 @@ policy = ontology + security doctrine
 Ontology identifies the target object, action, tool, dependency, and sensitivity.
 
 Security doctrine decides whether to allow, deny, require approval, escalate, alert, or apply a guardrail.
+
+### Captured Evidence
+
+Basic policy decision evidence:
+
+```text
+docs/evidence/basic
+```
+
+Risk-pattern evidence:
+
+```text
+docs/evidence/risk-patterns
+```
+
+Portfolio write-up:
+
+```text
+PORTFOLIO.md
+```
+
+Core portfolio sentence:
+
+```text
+Success is not enough.
+AI agent risk appears in behavior metrics, not only in the response body.
+```

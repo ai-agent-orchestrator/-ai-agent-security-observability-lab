@@ -180,6 +180,14 @@ docs/evidence
 
 The evidence folder is where Postman, Prometheus, and Grafana screenshots are collected with interpretation notes. The goal is to show metric combinations, not only isolated metric values.
 
+Portfolio evidence:
+
+```text
+PORTFOLIO.md
+```
+
+The portfolio document connects API scenarios, PromQL queries, screenshots, and PM/security interpretation.
+
 ## Metric Groups
 
 ```text
