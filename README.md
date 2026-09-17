@@ -96,6 +96,33 @@ feature/agent-risk-pattern-metrics-practice
 
 This repository is the security-centered interpretation and future expansion home.
 
+It now also contains an executable Spring Boot code snapshot:
+
+```text
+spring/guardrail-ready-policy-checker
+```
+
+That code was promoted from the observability practice project so this repository is not only documentation. It contains the current guardrail-ready policy checker implementation and agent risk-pattern metric scenarios.
+
+Run it locally:
+
+```powershell
+cd spring/guardrail-ready-policy-checker
+.\gradlew.bat bootRun
+```
+
+Health check:
+
+```text
+http://localhost:8080/actuator/health
+```
+
+Prometheus metrics:
+
+```text
+http://localhost:8080/actuator/prometheus
+```
+
 ## Metric Groups
 
 ```text
@@ -168,13 +195,12 @@ approval-required-retry
 
 ## Guardrail-Ready Policy Checker
 
-The Spring Boot implementation now includes a mock policy checker that can later be replaced with a NeMo Guardrails adapter.
+The Spring Boot implementation in this repository includes a mock policy checker that can later be replaced with a NeMo Guardrails adapter.
 
 Implementation branch:
 
 ```text
-spring-boot-api-observability-practice
-feature/agent-risk-pattern-metrics-practice
+spring/guardrail-ready-policy-checker
 ```
 
 Current API:
