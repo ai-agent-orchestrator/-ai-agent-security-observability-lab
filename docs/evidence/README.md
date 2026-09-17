@@ -36,6 +36,8 @@ Examples:
 | external API call + policy violation | Prometheus or Grafana | A risky request moved toward an external dependency. |
 | approval required + retry | Prometheus or Grafana | The agent repeatedly approached a human approval boundary. |
 | policy check decision | Postman | A request was classified as ALLOWED, DENIED, or APPROVAL_REQUIRED. |
+| actuator auth failure | Postman and Prometheus | A protected operational endpoint rejected an unauthenticated request. |
+| actuator access denied | Postman and Prometheus | A protected operational endpoint rejected an authenticated non-admin user. |
 
 ## PromQL Evidence Queries
 

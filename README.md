@@ -196,6 +196,14 @@ SECURITY_LAB.md
 
 The security lab protects Actuator endpoints and records authentication or authorization failures as custom metrics.
 
+Security portfolio evidence:
+
+```text
+SECURITY_PORTFOLIO.md
+```
+
+The security portfolio connects 401/403/admin access tests with Prometheus screenshots and beginner-friendly security interpretation.
+
 ## Metric Groups
 
 ```text

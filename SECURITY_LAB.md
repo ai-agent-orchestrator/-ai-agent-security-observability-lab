@@ -7,7 +7,6 @@ This lab protects Actuator endpoints and records security failures as Prometheus
 ```text
 /actuator/health
 /actuator/info
-/actuator/prometheus
 -> public
 
 other /actuator endpoints
@@ -63,8 +62,8 @@ increase(security_auth_failures_total[5m])
 Note:
 
 ```text
-/actuator/prometheus is intentionally public in this lab so Prometheus can scrape security metrics.
-/actuator/metrics stays protected for manual access tests.
+For local evidence capture, /actuator/prometheus can be temporarily opened so Prometheus can scrape security metrics.
+The committed default protects /actuator/prometheus again.
 ```
 
 ### 3. Protected Metrics With Admin Login
