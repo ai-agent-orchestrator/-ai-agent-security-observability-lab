@@ -271,7 +271,9 @@ Evidence:
 Interpretation:
 
 ```text
-External API access and policy violation were observed in the same time window.
+An external API call occurred with a risky outcome.
+At the same time, the policy violation metric increased with the blocked_sensitive_operation policy.
+This means external dependency access and policy violation were observed in the same time window.
 This pattern indicates that a risky agent request moved toward an external dependency.
 ```
 
