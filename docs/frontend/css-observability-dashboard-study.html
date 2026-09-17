@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS Observability Dashboard Study</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #d9dee8;
+      --primary: #2563eb;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --success: #15803d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.5;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 24px;
+      background: #111827;
+      color: #fff;
+      border-bottom: 1px solid #0f172a;
+    }
+
+    .brand {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .nav a {
+      color: #dbeafe;
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      transition: background-color 160ms ease, color 160ms ease;
+    }
+
+    .nav a:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    main {
+      width: min(1120px, calc(100% - 32px));
+      margin: 24px auto;
+    }
+
+    .summary {
+      margin-bottom: 20px;
+    }
+
+    .summary h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .summary p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .metric-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .metric-label {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .metric-value {
+      margin: 0;
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .metric-card.danger {
+      border-left: 4px solid var(--danger);
+    }
+
+    .metric-card.warning {
+      border-left: 4px solid var(--warning);
+    }
+
+    .metric-card.success {
+      border-left: 4px solid var(--success);
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .status {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 13px;
+      background: #f9fafb;
+    }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: #eef2ff;
+      color: #3730a3;
+      font-size: 13px;
+    }
+
+    @media (max-width: 760px) {
+      .topbar,
+      .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .metric-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      th,
+      td {
+        padding: 10px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .metric-grid {
+        grid-template-columns: 1fr;
+      }
+
+      table,
+      thead,
+      tbody,
+      tr,
+      th,
+      td {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      td {
+        border-bottom: 0;
+      }
+
+      tr {
+        border-bottom: 1px solid var(--line);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">AI Agent Security Observability</div>
+    <nav class="nav" aria-label="Dashboard navigation">
+      <a href="#metrics">Metrics</a>
+      <a href="#patterns">Risk Patterns</a>
+      <a href="#promql">PromQL</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="summary">
+      <h1>CSS Study: Observability Dashboard Layout</h1>
+      <p>This single file combines navbar, dashboard cards, table layout, hover transition, and responsive CSS.</p>
+    </section>
+
+    <section id="metrics" class="metric-grid" aria-label="Metric summary">
+      <article class="metric-card danger">
+        <p class="metric-label">Policy violations</p>
+        <p class="metric-value">18</p>
+      </article>
+      <article class="metric-card warning">
+        <p class="metric-label">Retries</p>
+        <p class="metric-value">21</p>
+      </article>
+      <article class="metric-card">
+        <p class="metric-label">Tool errors</p>
+        <p class="metric-value">6</p>
+      </article>
+      <article class="metric-card success">
+        <p class="metric-label">Allowed requests</p>
+        <p class="metric-value">32</p>
+      </article>
+    </section>
+
+    <section id="patterns" class="panel">
+      <div class="panel-header">
+        <h2>Risk Pattern Reading</h2>
+        <span class="status">Behavior metrics first</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Metric combination</th>
+            <th>Interpretation</th>
+            <th>Query idea</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Policy violation + retry</td>
+            <td>Blocked behavior is being attempted repeatedly.</td>
+            <td><code>increase(agent_policy_violation_total[5m]) or increase(agent_retry_count_total[5m])</code></td>
+          </tr>
+          <tr>
+            <td>Tool error + retry</td>
+            <td>An unstable tool may be called again and again.</td>
+            <td><code>increase(agent_tool_errors_total[5m]) or increase(agent_retry_count_total[5m])</code></td>
+          </tr>
+          <tr>
+            <td>External API + policy violation</td>
+            <td>A risky request moved toward an external dependency.</td>
+            <td><code>increase(agent_external_api_calls_total[5m]) or increase(agent_policy_violation_total[5m])</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
