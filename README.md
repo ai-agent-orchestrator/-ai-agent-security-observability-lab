@@ -172,6 +172,14 @@ Lab guide endpoint:
 http://localhost:8080/api/security-observability/guide
 ```
 
+Evidence gallery:
+
+```text
+docs/evidence
+```
+
+The evidence folder is where Postman, Prometheus, and Grafana screenshots are collected with interpretation notes. The goal is to show metric combinations, not only isolated metric values.
+
 ## Metric Groups
 
 ```text
