@@ -19,6 +19,7 @@ public class AgentRiskPatternService {
         String toolName = toolName(request, "database");
         int planSteps = planSteps(request, 4);
         int retryCount = retryCount(request, 3);
+        int totalTokens = totalTokens(request, 120, 40);
 
         agentMetricRecorder.recordToolCall(toolName, "denied_retry");
         agentMetricRecorder.recordPolicyViolation("blocked_sensitive_operation");
@@ -33,7 +34,7 @@ public class AgentRiskPatternService {
                 toolName,
                 planSteps,
                 retryCount,
-                request
+                totalTokens
         );
     }
 
@@ -41,6 +42,7 @@ public class AgentRiskPatternService {
         String toolName = toolName(request, "search");
         int planSteps = planSteps(request, 5);
         int retryCount = retryCount(request, 3);
+        int totalTokens = totalTokens(request, 100, 50);
 
         agentMetricRecorder.recordToolCall(toolName, "error_retry");
         agentMetricRecorder.recordToolError(toolName, "repeated_tool_failure");
@@ -55,7 +57,7 @@ public class AgentRiskPatternService {
                 toolName,
                 planSteps,
                 retryCount,
-                request
+                totalTokens
         );
     }
 
@@ -63,6 +65,7 @@ public class AgentRiskPatternService {
         String toolName = toolName(request, "external-api");
         int planSteps = planSteps(request, 4);
         int retryCount = retryCount(request, 1);
+        int totalTokens = totalTokens(request, 180, 70);
 
         agentMetricRecorder.recordToolCall(toolName, "external_policy_violation");
         agentMetricRecorder.recordExternalApiCall("mock-llm-provider", "risky");
@@ -78,7 +81,7 @@ public class AgentRiskPatternService {
                 toolName,
                 planSteps,
                 retryCount,
-                request
+                totalTokens
         );
     }
 
@@ -86,6 +89,7 @@ public class AgentRiskPatternService {
         String toolName = toolName(request, "email");
         int planSteps = planSteps(request, 4);
         int retryCount = retryCount(request, 2);
+        int totalTokens = totalTokens(request, 150, 60);
 
         agentMetricRecorder.recordToolCall(toolName, "approval_retry");
         agentMetricRecorder.recordApprovalRequired("sensitive_action_retry");
@@ -100,7 +104,7 @@ public class AgentRiskPatternService {
                 toolName,
                 planSteps,
                 retryCount,
-                request
+                totalTokens
         );
     }
 
@@ -110,7 +114,7 @@ public class AgentRiskPatternService {
                                            String toolName,
                                            int planSteps,
                                            int retryCount,
-                                           AgentPracticeRequest request) {
+                                           int totalTokens) {
         return new AgentPracticeResponse(
                 mode,
                 decision,
@@ -118,7 +122,7 @@ public class AgentRiskPatternService {
                 toolName,
                 planSteps,
                 retryCount,
-                promptTokens(request, 0) + completionTokens(request, 0),
+                totalTokens,
                 TraceContext.currentTraceId()
         );
     }
@@ -161,5 +165,9 @@ public class AgentRiskPatternService {
         }
 
         return request.completionTokens();
+    }
+
+    private int totalTokens(AgentPracticeRequest request, int promptDefault, int completionDefault) {
+        return promptTokens(request, promptDefault) + completionTokens(request, completionDefault);
     }
 }

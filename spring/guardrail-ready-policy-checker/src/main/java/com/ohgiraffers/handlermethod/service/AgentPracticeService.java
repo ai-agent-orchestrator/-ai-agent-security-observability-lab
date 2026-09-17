@@ -19,6 +19,7 @@ public class AgentPracticeService {
         String toolName = toolName(request);
         int planSteps = planSteps(request, 3);
         int retryCount = retryCount(request, 0);
+        int totalTokens = totalTokens(request, 120, 80);
 
         agentMetricRecorder.recordToolCall(toolName, "success");
         agentMetricRecorder.recordPlanSteps(planSteps);
@@ -32,7 +33,7 @@ public class AgentPracticeService {
                 toolName,
                 planSteps,
                 retryCount,
-                request
+                totalTokens
         );
     }
 
@@ -40,6 +41,7 @@ public class AgentPracticeService {
         String toolName = toolName(request);
         int planSteps = planSteps(request, 2);
         int retryCount = retryCount(request, 1);
+        int totalTokens = totalTokens(request, 80, 20);
 
         agentMetricRecorder.recordToolCall(toolName, "error");
         agentMetricRecorder.recordToolError(toolName, "simulated_tool_failure");
@@ -54,7 +56,7 @@ public class AgentPracticeService {
                 toolName,
                 planSteps,
                 retryCount,
-                request
+                totalTokens
         );
     }
 
@@ -62,6 +64,7 @@ public class AgentPracticeService {
         String toolName = toolName(request);
         int planSteps = planSteps(request, 5);
         int retryCount = retryCount(request, 3);
+        int totalTokens = totalTokens(request, 140, 90);
 
         agentMetricRecorder.recordToolCall(toolName, "retried");
         agentMetricRecorder.recordPlanSteps(planSteps);
@@ -75,7 +78,7 @@ public class AgentPracticeService {
                 toolName,
                 planSteps,
                 retryCount,
-                request
+                totalTokens
         );
     }
 
@@ -83,6 +86,7 @@ public class AgentPracticeService {
         String toolName = toolName(request);
         int planSteps = planSteps(request, 4);
         int retryCount = retryCount(request, 0);
+        int totalTokens = totalTokens(request, 160, 60);
 
         agentMetricRecorder.recordToolCall(toolName, "approval_required");
         agentMetricRecorder.recordApprovalRequired("sensitive_action");
@@ -97,7 +101,7 @@ public class AgentPracticeService {
                 toolName,
                 planSteps,
                 retryCount,
-                request
+                totalTokens
         );
     }
 
@@ -105,6 +109,7 @@ public class AgentPracticeService {
         String toolName = toolName(request);
         int planSteps = planSteps(request, 1);
         int retryCount = retryCount(request, 0);
+        int totalTokens = totalTokens(request, 60, 10);
 
         agentMetricRecorder.recordToolCall(toolName, "denied");
         agentMetricRecorder.recordPolicyViolation("mock_guardrail_policy");
@@ -119,7 +124,7 @@ public class AgentPracticeService {
                 toolName,
                 planSteps,
                 retryCount,
-                request
+                totalTokens
         );
     }
 
@@ -127,6 +132,7 @@ public class AgentPracticeService {
         String toolName = toolName(request);
         int planSteps = planSteps(request, 3);
         int retryCount = retryCount(request, 0);
+        int totalTokens = totalTokens(request, 200, 120);
 
         agentMetricRecorder.recordToolCall(toolName, "external_api");
         agentMetricRecorder.recordExternalApiCall("mock-llm-provider", "success");
@@ -141,7 +147,7 @@ public class AgentPracticeService {
                 toolName,
                 planSteps,
                 retryCount,
-                request
+                totalTokens
         );
     }
 
@@ -149,6 +155,7 @@ public class AgentPracticeService {
         String toolName = toolName(request);
         int planSteps = planSteps(request, 2);
         int retryCount = retryCount(request, 0);
+        int totalTokens = totalTokens(request, 100, 40);
 
         agentMetricRecorder.recordToolCall(toolName, "db_write");
         agentMetricRecorder.recordDbWrite("agent_memory", "success");
@@ -163,7 +170,7 @@ public class AgentPracticeService {
                 toolName,
                 planSteps,
                 retryCount,
-                request
+                totalTokens
         );
     }
 
@@ -173,7 +180,7 @@ public class AgentPracticeService {
                                            String toolName,
                                            int planSteps,
                                            int retryCount,
-                                           AgentPracticeRequest request) {
+                                           int totalTokens) {
         return new AgentPracticeResponse(
                 mode,
                 decision,
@@ -181,7 +188,7 @@ public class AgentPracticeService {
                 toolName,
                 planSteps,
                 retryCount,
-                promptTokens(request, 0) + completionTokens(request, 0),
+                totalTokens,
                 TraceContext.currentTraceId()
         );
     }
@@ -224,5 +231,9 @@ public class AgentPracticeService {
         }
 
         return request.completionTokens();
+    }
+
+    private int totalTokens(AgentPracticeRequest request, int promptDefault, int completionDefault) {
+        return promptTokens(request, promptDefault) + completionTokens(request, completionDefault);
     }
 }
