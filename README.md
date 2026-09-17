@@ -188,6 +188,14 @@ PORTFOLIO.md
 
 The portfolio document connects API scenarios, PromQL queries, screenshots, and PM/security interpretation.
 
+Spring Security lab:
+
+```text
+SECURITY_LAB.md
+```
+
+The security lab protects Actuator endpoints and records authentication or authorization failures as custom metrics.
+
 ## Metric Groups
 
 ```text
@@ -202,6 +210,10 @@ Agent behavior
 Security / guardrail signals
 -> agent_policy_violation_total
 -> agent_approval_required_total
+
+Spring Security signals
+-> security_auth_failures_total
+-> security_access_denied_total
 
 Internal cost
 -> practice_api_sql_statements_total

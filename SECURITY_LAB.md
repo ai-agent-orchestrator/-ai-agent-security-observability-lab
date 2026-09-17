@@ -1,0 +1,99 @@
+# Spring Security Observability Lab
+
+This lab protects Actuator endpoints and records security failures as Prometheus metrics.
+
+## Security Rule
+
+```text
+/actuator/health
+/actuator/info
+-> public
+
+other /actuator endpoints
+-> ADMIN role required
+```
+
+Admin test account:
+
+```text
+username: admin
+password: admin123
+```
+
+## Test Flow
+
+### 1. Public Health Check
+
+```http
+GET http://localhost:8080/actuator/health
+```
+
+Expected:
+
+```text
+200 OK
+```
+
+### 2. Protected Metrics Without Login
+
+```http
+GET http://localhost:8080/actuator/metrics
+```
+
+Expected:
+
+```text
+401 Unauthorized
+```
+
+PromQL:
+
+```promql
+increase(security_auth_failures_total[5m])
+```
+
+### 3. Protected Metrics With Admin Login
+
+Postman Authorization:
+
+```text
+Type: Basic Auth
+Username: admin
+Password: admin123
+```
+
+Request:
+
+```http
+GET http://localhost:8080/actuator/metrics
+```
+
+Expected:
+
+```text
+200 OK
+```
+
+## Why This Matters
+
+Security observability asks:
+
+```text
+Who tried to access protected operational surfaces?
+How often did authentication fail?
+Which endpoints were targeted?
+```
+
+This extends the agent behavior lab:
+
+```text
+agent behavior metrics
++ policy metrics
++ security access metrics
+```
+
+Core message:
+
+```text
+Operational security events should be measured, not only blocked.
+```
