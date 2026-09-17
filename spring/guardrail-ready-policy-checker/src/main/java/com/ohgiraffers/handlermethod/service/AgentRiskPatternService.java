@@ -140,7 +140,7 @@ public class AgentRiskPatternService {
     }
 
     private int retryCount(AgentPracticeRequest request, int defaultValue) {
-        if (request == null || request.retryCount() < 0) {
+        if (request == null || request.retryCount() <= 0) {
             return defaultValue;
         }
 
