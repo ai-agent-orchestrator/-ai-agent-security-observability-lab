@@ -1,0 +1,187 @@
+# AI Agent Security Observability Lab
+
+This repository is a security-focused lab for detecting suspicious AI agent behavior through custom metrics, Prometheus, Grafana, and future guardrail integration.
+
+The main idea:
+
+```text
+AI agent security is not only about the final answer.
+It is about what the agent repeatedly tried to do, which tools it called, where it failed, and whether it approached risky actions.
+```
+
+## Core Thesis
+
+Single metrics are useful, but security meaning often appears in combinations.
+
+```text
+policy violation + retry
+-> repeated attempts around a blocked action
+
+tool error + retry
+-> repeated calls to an unstable or failing tool
+
+external API call + policy violation
+-> risky behavior moving toward an external dependency
+
+approval required + retry
+-> repeated attempts near a human approval boundary
+```
+
+The project direction:
+
+```text
+Detect suspicious agent behavior early
+-> interpret metric combinations
+-> alert or escalate
+-> apply customized guardrails
+-> record the incident
+-> update policy and metrics
+```
+
+## Why This Matters
+
+API success is no longer enough.
+
+```text
+The API succeeded.
+But was it cheap, safe, stable, and policy-compliant?
+```
+
+For AI agents, cost and security are tightly connected:
+
+```text
+retry
+-> repeated cost
+
+tool call
+-> execution cost and operational risk
+
+external API call
+-> data exposure and dependency risk
+
+policy violation
+-> blocked or dangerous behavior
+
+approval required
+-> human control boundary
+```
+
+## Current Implementation Source
+
+The current executable Spring Boot experiments live in:
+
+```text
+C:\myLectureWs\spring-boot-api-observability-practice
+```
+
+Related GitHub repository:
+
+```text
+https://github.com/ai-agent-orchestrator/spring-boot-api-observability-practice
+```
+
+Relevant branches:
+
+```text
+feature/jpa-n-plus-one-practice
+-> SQL statement count metric for N+1 observability
+
+feature/agent-custom-metrics-practice
+-> agent behavior metrics
+
+feature/agent-risk-pattern-metrics-practice
+-> suspicious agent behavior metric combinations
+```
+
+This repository is the security-centered interpretation and future expansion home.
+
+## Metric Groups
+
+```text
+Agent behavior
+-> agent_tool_calls_total
+-> agent_tool_errors_total
+-> agent_retry_count_total
+-> agent_cost_tokens_total
+-> agent_external_api_calls_total
+-> agent_db_write_total
+
+Security / guardrail signals
+-> agent_policy_violation_total
+-> agent_approval_required_total
+
+Internal cost
+-> practice_api_sql_statements_total
+-> practice_api_request_duration_seconds
+-> practice_api_requests_total
+```
+
+## Suspicious Behavior PromQL
+
+```promql
+increase(agent_policy_violation_total[5m]) >= 1
+and
+increase(agent_retry_count_total[5m]) >= 3
+```
+
+```promql
+increase(agent_tool_errors_total[5m])
+and
+increase(agent_retry_count_total[5m])
+```
+
+```promql
+increase(agent_external_api_calls_total[5m])
+and
+increase(agent_policy_violation_total[5m])
+```
+
+## Planned October NeMo Guardrails Extension
+
+This repository does not integrate NVIDIA NeMo Guardrails yet.
+
+The plan is:
+
+```text
+Learn NVIDIA NeMo Guardrails
+-> map each detected behavior pattern to a customized guardrail
+-> connect metrics and alerts to guardrail actions
+-> test detect -> block / approve / escalate flows
+```
+
+Planned mappings:
+
+```text
+policy-violation-retry
+-> custom guardrail: stop repeated risky attempts and require human review
+
+tool-error-retry
+-> custom guardrail: limit retries and route to fallback handling
+
+external-api-policy-violation
+-> custom guardrail: block outbound access or require approval
+
+approval-required-retry
+-> custom guardrail: freeze action until explicit approval is recorded
+```
+
+## Portfolio Positioning
+
+This project is not a chatbot demo.
+
+It is a lab for:
+
+```text
+cost-aware AI backend observability
+agent behavior detection
+security event metrics
+guardrail-ready architecture
+human approval boundaries
+incident interpretation
+```
+
+The PM-level question:
+
+```text
+What behavior, cost, and risk should be visible before an AI agent is trusted with autonomy?
+```
