@@ -91,6 +91,7 @@ feature/agent-custom-metrics-practice
 
 feature/agent-risk-pattern-metrics-practice
 -> suspicious agent behavior metric combinations
+-> guardrail-ready policy checker
 ```
 
 This repository is the security-centered interpretation and future expansion home.
@@ -163,6 +164,64 @@ external-api-policy-violation
 
 approval-required-retry
 -> custom guardrail: freeze action until explicit approval is recorded
+```
+
+## Guardrail-Ready Policy Checker
+
+The Spring Boot implementation now includes a mock policy checker that can later be replaced with a NeMo Guardrails adapter.
+
+Implementation branch:
+
+```text
+spring-boot-api-observability-practice
+feature/agent-risk-pattern-metrics-practice
+```
+
+Current API:
+
+```http
+POST /api/agent/policy-check
+```
+
+Current flow:
+
+```text
+AgentPolicyCheckController
+-> AgentPolicyCheckService
+-> AgentMetricRecorder
+-> Prometheus / Grafana
+```
+
+Current mock decisions:
+
+```text
+search public policy documents
+-> ALLOWED
+
+delete all customer records
+-> DENIED
+
+send customer report by email
+-> APPROVAL_REQUIRED
+```
+
+Current metrics:
+
+```text
+agent_policy_check_total
+agent_policy_allowed_total
+agent_policy_violation_total
+agent_approval_required_total
+```
+
+Replacement point:
+
+```text
+Current:
+AgentPolicyCheckService -> mock if-based rules
+
+Future:
+AgentPolicyCheckService -> NVIDIA NeMo Guardrails adapter
 ```
 
 ## Portfolio Positioning
