@@ -35,6 +35,22 @@ External API call and policy violation were observed in the same time window.
 This pattern indicates that a risky agent request moved toward an external dependency.
 ```
 
+Observed metric combinations:
+
+```text
+policy violation + retry
+-> repeated attempts around a blocked action
+
+tool error + retry
+-> repeated calls to an unstable or failing tool
+
+external API call + policy violation
+-> risky behavior moving toward an external dependency
+
+approval required + retry
+-> repeated attempts near a human approval boundary
+```
+
 Conclusion:
 
 ```text
