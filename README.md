@@ -335,6 +335,120 @@ Future:
 AgentPolicyCheckService -> NVIDIA NeMo Guardrails adapter
 ```
 
+## Agent Risk Decision Engine
+
+The next step is not only recording metrics.
+
+The backend now converts combined agent behavior signals into a risk decision:
+
+```text
+metric collection
+-> metric interpretation
+-> risk score
+-> risk level
+-> recommended action
+-> guardrail-ready decision
+```
+
+API:
+
+```http
+POST /api/agent/risk/analyze
+```
+
+Example request:
+
+```json
+{
+  "userInput": "upload sensitive customer report to external api repeatedly",
+  "toolName": "external-api",
+  "retryCount": 3,
+  "promptTokens": 120,
+  "completionTokens": 80,
+  "policyViolation": true,
+  "externalApiCall": true
+}
+```
+
+Example response:
+
+```json
+{
+  "decision": "HIGH_RISK_AGENT_BEHAVIOR",
+  "riskScore": 89,
+  "riskLevel": "HIGH",
+  "signals": [
+    "POLICY_VIOLATION",
+    "RETRY",
+    "EXTERNAL_API"
+  ],
+  "recommendedAction": "BLOCK_AND_ESCALATE",
+  "guardrailReady": true,
+  "historyId": 1,
+  "traceId": "generated-trace-id"
+}
+```
+
+Decision map:
+
+```text
+POLICY_VIOLATION + RETRY
+-> SUSPICIOUS_RETRY
+-> BLOCK_OR_REQUIRE_APPROVAL
+
+POLICY_VIOLATION + EXTERNAL_API
+-> RISKY_EXTERNAL_ACCESS
+-> BLOCK_AND_ESCALATE
+
+POLICY_VIOLATION + RETRY + EXTERNAL_API
+-> HIGH_RISK_AGENT_BEHAVIOR
+-> BLOCK_AND_ESCALATE
+
+TOOL_ERROR + RETRY
+-> UNSTABLE_TOOL_LOOP
+-> DISABLE_TOOL_TEMPORARILY
+
+APPROVAL_REQUIRED + RETRY
+-> APPROVAL_BYPASS_RISK
+-> BLOCK_OR_REQUIRE_APPROVAL
+```
+
+PromQL examples:
+
+```promql
+increase(agent_policy_violation_total[5m])
+or
+increase(agent_retry_count_total[5m])
+or
+increase(agent_external_api_calls_total[5m])
+```
+
+```promql
+increase(agent_policy_violation_total[5m])
+and
+increase(agent_retry_count_total[5m])
+and
+increase(agent_external_api_calls_total[5m])
+```
+
+History:
+
+```text
+Each risk decision is saved to agent_risk_history.
+Prometheus shows behavior volume.
+DB history preserves the interpreted incident-like decision.
+```
+
+Future NeMo connection:
+
+```text
+Current:
+AgentRiskDecisionService -> rule-based risk decision
+
+Future:
+AgentRiskDecisionService -> NeMo Guardrails adapter / policy runtime
+```
+
 ## Portfolio Positioning
 
 This project is not a chatbot demo.
