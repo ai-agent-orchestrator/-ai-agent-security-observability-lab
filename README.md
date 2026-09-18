@@ -579,6 +579,145 @@ Spring REST API
 + React-ready JSON APIs
 ```
 
+## Architecture Explanation for Portfolio
+
+This project is built around one backend flow:
+
+```text
+AI agent request
+-> JSON contract
+-> Spring DTO
+-> risk decision service
+-> metric recording
+-> JPA history
+-> guardrail-ready response
+```
+
+The frontend is intentionally treated as a control surface.
+The important logic belongs to the backend.
+
+```text
+Frontend
+-> sends JSON
+-> displays the result
+
+Backend
+-> interprets risk
+-> records metrics
+-> saves history
+-> prepares guardrail action
+```
+
+### JSON to Backend Flow
+
+The request starts as JSON:
+
+```json
+{
+  "userInput": "upload sensitive customer report to external api repeatedly",
+  "toolName": "external-api",
+  "retryCount": 3,
+  "policyViolation": true,
+  "externalApiCall": true
+}
+```
+
+Spring maps that JSON into a request DTO:
+
+```text
+JSON key
+-> DTO field
+-> service input
+```
+
+The service then extracts behavior signals:
+
+```text
+POLICY_VIOLATION
+RETRY
+EXTERNAL_API_CALL
+TOOL_ERROR
+APPROVAL_REQUIRED
+DB_WRITE
+```
+
+These signals are converted into a backend risk decision:
+
+```text
+POLICY_VIOLATION + RETRY + EXTERNAL_API_CALL
+-> HIGH_RISK_AGENT_BEHAVIOR
+-> BLOCK_AND_ESCALATE
+```
+
+The final response is again returned as JSON:
+
+```json
+{
+  "decision": "HIGH_RISK_AGENT_BEHAVIOR",
+  "riskScore": 89,
+  "riskLevel": "HIGH",
+  "recommendedAction": "BLOCK_AND_ESCALATE",
+  "guardrailReady": true
+}
+```
+
+### Metric and History Separation
+
+This project separates metric observation from event history.
+
+```text
+Prometheus
+-> how many times did the signal happen?
+
+JPA / SQL history
+-> which request caused which risk decision?
+```
+
+Prometheus answers operational questions:
+
+```text
+Did policy violations increase?
+Did retries spike?
+Did external API calls happen near risky requests?
+```
+
+JPA history answers audit-style questions:
+
+```text
+What did the agent request?
+Which tool was involved?
+Which decision was made?
+Which action was recommended?
+When did it happen?
+```
+
+This means the system does not only observe behavior volume.
+It also preserves the interpreted risk event.
+
+### Why This Is Guardrail-Ready
+
+The current implementation uses rule-based policy checks.
+That is intentional.
+
+```text
+Current:
+GuardrailDecisionClient -> RuleBasedGuardrailDecisionClient
+
+Future:
+GuardrailDecisionClient -> NemoGuardrailsDecisionClient
+```
+
+The interface keeps the backend structure stable.
+When NVIDIA NeMo Guardrails is added later, the policy runtime can be replaced without changing the whole controller and API structure.
+
+Portfolio summary:
+
+```text
+This project converts raw AI agent behavior signals into backend risk decisions,
+records them as metrics and JPA history,
+and prepares the architecture for future guardrail enforcement.
+```
+
 ## Portfolio Positioning
 
 This project is not a chatbot demo.
