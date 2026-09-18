@@ -26,13 +26,16 @@ public class AgentRiskDecisionService {
     private final AgentMetricRecorder agentMetricRecorder;
     private final AgentRiskHistoryRepository agentRiskHistoryRepository;
     private final AgentRunHistoryRepository agentRunHistoryRepository;
+    private final RiskIncidentService riskIncidentService;
 
     public AgentRiskDecisionService(AgentMetricRecorder agentMetricRecorder,
                                     AgentRiskHistoryRepository agentRiskHistoryRepository,
-                                    AgentRunHistoryRepository agentRunHistoryRepository) {
+                                    AgentRunHistoryRepository agentRunHistoryRepository,
+                                    RiskIncidentService riskIncidentService) {
         this.agentMetricRecorder = agentMetricRecorder;
         this.agentRiskHistoryRepository = agentRiskHistoryRepository;
         this.agentRunHistoryRepository = agentRunHistoryRepository;
+        this.riskIncidentService = riskIncidentService;
     }
 
     @Transactional
@@ -130,6 +133,14 @@ public class AgentRiskDecisionService {
                 boundedRiskScore,
                 traceId
         ));
+        riskIncidentService.createIfNeeded(
+                decision.name(),
+                boundedRiskScore,
+                riskLevel.name(),
+                recommendedAction.name(),
+                savedHistory.getId(),
+                traceId
+        );
 
         return new AgentRiskAnalyzeResponse(
                 decision.name(),

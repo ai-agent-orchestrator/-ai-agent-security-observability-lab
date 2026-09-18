@@ -467,3 +467,25 @@ CSS does not handle async API calls.
 JavaScript or React handles async API calls.
 CSS only styles loading states, result cards, and status badges.
 ```
+
+## 15. Incident Response Prototype
+
+```mermaid
+flowchart TD
+    A[Risk Decision] --> B{High Risk?}
+    B -->|No| C[No Incident]
+    B -->|Yes| D[Create Incident OPEN]
+    D --> E[GET incidents]
+    E --> F[Operator Review]
+    F --> G[PATCH ack]
+    G --> H[ACKNOWLEDGED]
+    H --> I[PATCH resolve]
+    I --> J[RESOLVED]
+```
+
+Incident purpose:
+
+```text
+Alerting should not stop at a graph.
+A high-risk signal should become an operational incident that can be reviewed, acknowledged, and resolved.
+```

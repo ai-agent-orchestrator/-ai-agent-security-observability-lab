@@ -558,6 +558,13 @@ Implemented additions:
 -> POST /api/agent/jobs returns a jobId immediately.
 -> The risk analysis runs on a Java 21 virtual thread.
 -> GET /api/agent/jobs/{jobId} returns PENDING, RUNNING, COMPLETED, or FAILED.
+
+9. Incident Prototype
+-> High-risk decisions create risk_incident records.
+-> Operators can acknowledge or resolve incidents.
+-> GET /api/incidents
+-> PATCH /api/incidents/{incidentId}/ack
+-> PATCH /api/incidents/{incidentId}/resolve
 ```
 
 Backend map:
@@ -583,6 +590,7 @@ Spring REST API
 + security event tracking
 + React-ready JSON APIs
 + Java 21 virtual thread async jobs
++ incident response prototype
 ```
 
 Async agent job APIs:

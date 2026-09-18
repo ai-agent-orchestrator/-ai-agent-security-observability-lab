@@ -17,15 +17,18 @@ public class AdminDashboardService {
     private final AgentRiskHistoryRepository agentRiskHistoryRepository;
     private final SecurityEventHistoryRepository securityEventHistoryRepository;
     private final AgentRiskHistoryQueryService agentRiskHistoryQueryService;
+    private final RiskIncidentService riskIncidentService;
 
     public AdminDashboardService(AgentRunHistoryRepository agentRunHistoryRepository,
                                  AgentRiskHistoryRepository agentRiskHistoryRepository,
                                  SecurityEventHistoryRepository securityEventHistoryRepository,
-                                 AgentRiskHistoryQueryService agentRiskHistoryQueryService) {
+                                 AgentRiskHistoryQueryService agentRiskHistoryQueryService,
+                                 RiskIncidentService riskIncidentService) {
         this.agentRunHistoryRepository = agentRunHistoryRepository;
         this.agentRiskHistoryRepository = agentRiskHistoryRepository;
         this.securityEventHistoryRepository = securityEventHistoryRepository;
         this.agentRiskHistoryQueryService = agentRiskHistoryQueryService;
+        this.riskIncidentService = riskIncidentService;
     }
 
     @Transactional(readOnly = true)
@@ -34,6 +37,7 @@ public class AdminDashboardService {
                 agentRunHistoryRepository.count(),
                 agentRiskHistoryRepository.count(),
                 securityEventHistoryRepository.count(),
+                riskIncidentService.countOpen(),
                 agentRiskHistoryQueryService.summarize()
         );
     }
