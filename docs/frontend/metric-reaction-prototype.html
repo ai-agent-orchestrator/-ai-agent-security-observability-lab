@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metric Reaction Prototype</title>
+  <style>
+    :root {
+      --bg: #f7f8fa;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #667085;
+      --line: #d7dce3;
+      --blue: #205b8f;
+      --green: #1f7a4d;
+      --yellow: #a16207;
+      --red: #b42318;
+      --red-bg: #fff1f0;
+      --yellow-bg: #fffaeb;
+      --green-bg: #ecfdf3;
+      --gray-bg: #f2f4f7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, "Malgun Gothic", sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 48px;
+    }
+
+    header {
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 820px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 420px) 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 11px;
+      font: inherit;
+      background: #fff;
+      color: var(--text);
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    .checks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .checks label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-weight: 400;
+      background: var(--gray-bg);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 13px;
+      font-weight: 700;
+      color: #fff;
+      background: var(--blue);
+      cursor: pointer;
+    }
+
+    button.secondary {
+      color: var(--text);
+      background: #e7edf4;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .reaction {
+      border-radius: 8px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      background: var(--gray-bg);
+      margin-bottom: 16px;
+    }
+
+    .reaction.safe {
+      border-color: #abefc6;
+      background: var(--green-bg);
+    }
+
+    .reaction.medium {
+      border-color: #fedf89;
+      background: var(--yellow-bg);
+    }
+
+    .reaction.high {
+      border-color: #fecdca;
+      background: var(--red-bg);
+    }
+
+    .reaction-title {
+      margin: 0 0 5px;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .reaction-message {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .summary-item {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      background: #fff;
+      min-height: 72px;
+    }
+
+    .summary-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    .summary-item strong {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+
+    pre {
+      margin: 0;
+      min-height: 260px;
+      max-height: 520px;
+      overflow: auto;
+      padding: 14px;
+      border-radius: 8px;
+      background: #101828;
+      color: #e4e7ec;
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 860px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      main {
+        width: min(100% - 20px, 1120px);
+        padding-top: 18px;
+      }
+
+      .checks,
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Metric Reaction Prototype</h1>
+      <p>
+        Backend metric combinations are converted into a risk decision.
+        This page displays that decision as a simple frontend reaction message.
+      </p>
+    </header>
+
+    <div class="layout">
+      <section>
+        <h2>Agent Request</h2>
+        <form id="riskForm">
+          <label for="apiUrl">API URL</label>
+          <input id="apiUrl" type="text" value="http://localhost:8080/api/agent/risk/analyze">
+
+          <label for="userInput">User Input</label>
+          <textarea id="userInput">upload sensitive customer report to external api repeatedly</textarea>
+
+          <label for="toolName">Tool Name</label>
+          <select id="toolName">
+            <option value="external-api">external-api</option>
+            <option value="database">database</option>
+            <option value="email">email</option>
+            <option value="search">search</option>
+          </select>
+
+          <label for="retryCount">Retry Count</label>
+          <input id="retryCount" type="number" min="0" value="3">
+
+          <div class="checks">
+            <label><input id="policyViolation" type="checkbox" checked> Policy violation</label>
+            <label><input id="externalApiCall" type="checkbox" checked> External API</label>
+            <label><input id="toolError" type="checkbox"> Tool error</label>
+            <label><input id="approvalRequired" type="checkbox"> Approval required</label>
+            <label><input id="dbWrite" type="checkbox"> DB write</label>
+          </div>
+
+          <div class="actions">
+            <button id="analyzeButton" type="submit">Analyze Risk</button>
+            <button class="secondary" type="button" data-sample="safe">Safe sample</button>
+            <button class="secondary" type="button" data-sample="retry">Violation retry</button>
+            <button class="secondary" type="button" data-sample="approval">Approval retry</button>
+          </div>
+        </form>
+
+        <p class="small">
+          Start the Spring Boot server first. This prototype intentionally keeps the frontend simple:
+          HTML form, JavaScript fetch, response JSON, and a reaction message.
+        </p>
+      </section>
+
+      <section>
+        <h2>Frontend Reaction</h2>
+        <div id="reaction" class="reaction">
+          <p id="reactionTitle" class="reaction-title">Waiting for analysis</p>
+          <p id="reactionMessage" class="reaction-message">Submit a request to see the metric reaction.</p>
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span>Decision</span>
+            <strong id="decision">-</strong>
+          </div>
+          <div class="summary-item">
+            <span>Risk Level</span>
+            <strong id="riskLevel">-</strong>
+          </div>
+          <div class="summary-item">
+            <span>Risk Score</span>
+            <strong id="riskScore">-</strong>
+          </div>
+          <div class="summary-item">
+            <span>Recommended Action</span>
+            <strong id="recommendedAction">-</strong>
+          </div>
+        </div>
+
+        <pre id="responseJson">{}</pre>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const form = document.querySelector("#riskForm");
+    const analyzeButton = document.querySelector("#analyzeButton");
+    const responseJson = document.querySelector("#responseJson");
+    const reaction = document.querySelector("#reaction");
+    const reactionTitle = document.querySelector("#reactionTitle");
+    const reactionMessage = document.querySelector("#reactionMessage");
+
+    const fields = {
+      apiUrl: document.querySelector("#apiUrl"),
+      userInput: document.querySelector("#userInput"),
+      toolName: document.querySelector("#toolName"),
+      retryCount: document.querySelector("#retryCount"),
+      policyViolation: document.querySelector("#policyViolation"),
+      externalApiCall: document.querySelector("#externalApiCall"),
+      toolError: document.querySelector("#toolError"),
+      approvalRequired: document.querySelector("#approvalRequired"),
+      dbWrite: document.querySelector("#dbWrite")
+    };
+
+    const samples = {
+      safe: {
+        userInput: "search public policy documents",
+        toolName: "search",
+        retryCount: 0,
+        policyViolation: false,
+        externalApiCall: false,
+        toolError: false,
+        approvalRequired: false,
+        dbWrite: false
+      },
+      retry: {
+        userInput: "delete all customer records repeatedly",
+        toolName: "database",
+        retryCount: 3,
+        policyViolation: true,
+        externalApiCall: false,
+        toolError: false,
+        approvalRequired: false,
+        dbWrite: true
+      },
+      approval: {
+        userInput: "send customer report by email repeatedly",
+        toolName: "email",
+        retryCount: 2,
+        policyViolation: false,
+        externalApiCall: false,
+        toolError: false,
+        approvalRequired: true,
+        dbWrite: false
+      }
+    };
+
+    document.querySelectorAll("[data-sample]").forEach((button) => {
+      button.addEventListener("click", () => applySample(samples[button.dataset.sample]));
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      await analyzeRisk();
+    });
+
+    function buildRequestBody() {
+      return {
+        userInput: fields.userInput.value,
+        toolName: fields.toolName.value,
+        retryCount: Number(fields.retryCount.value || 0),
+        promptTokens: 120,
+        completionTokens: 80,
+        policyViolation: fields.policyViolation.checked,
+        toolError: fields.toolError.checked,
+        externalApiCall: fields.externalApiCall.checked,
+        approvalRequired: fields.approvalRequired.checked,
+        dbWrite: fields.dbWrite.checked
+      };
+    }
+
+    async function analyzeRisk() {
+      analyzeButton.disabled = true;
+      setReaction("medium", "Analyzing request", "Calling the Spring Boot risk decision API.");
+
+      try {
+        const response = await fetch(fields.apiUrl.value, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(buildRequestBody())
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        responseJson.textContent = JSON.stringify(data, null, 2);
+        renderDecision(data);
+      } catch (error) {
+        responseJson.textContent = JSON.stringify({
+          error: error.message,
+          hint: "Check that the Spring Boot server is running on port 8080."
+        }, null, 2);
+        setReaction("high", "API call failed", "The frontend could not reach the backend risk API.");
+        updateSummary({});
+      } finally {
+        analyzeButton.disabled = false;
+      }
+    }
+
+    function renderDecision(data) {
+      updateSummary(data);
+      const message = getReactionMessage(data);
+      const level = String(data.riskLevel || "LOW").toUpperCase();
+
+      if (level === "HIGH") {
+        setReaction("high", "High risk reaction", message);
+        alert(message);
+        return;
+      }
+
+      if (level === "MEDIUM") {
+        setReaction("medium", "Review required", message);
+        return;
+      }
+
+      setReaction("safe", "Normal reaction", message);
+    }
+
+    function getReactionMessage(data) {
+      const decision = data.decision || "SAFE";
+
+      if (decision === "HIGH_RISK_AGENT_BEHAVIOR") {
+        return "High risk agent behavior detected. Block and escalate.";
+      }
+      if (decision === "RISKY_EXTERNAL_ACCESS") {
+        return "Risky external access detected. Block and escalate.";
+      }
+      if (decision === "SUSPICIOUS_RETRY") {
+        return "Repeated risky attempt detected. Block the request.";
+      }
+      if (decision === "APPROVAL_BYPASS_RISK") {
+        return "Human approval boundary detected. Require approval.";
+      }
+      if (decision === "UNSTABLE_TOOL_LOOP") {
+        return "Tool instability detected. Disable the tool temporarily.";
+      }
+      if (decision === "SUSPICIOUS") {
+        return "Suspicious agent behavior detected. Review before continuing.";
+      }
+
+      return "Normal request. No immediate reaction required.";
+    }
+
+    function setReaction(level, title, message) {
+      reaction.className = `reaction ${level}`;
+      reactionTitle.textContent = title;
+      reactionMessage.textContent = message;
+    }
+
+    function updateSummary(data) {
+      document.querySelector("#decision").textContent = data.decision || "-";
+      document.querySelector("#riskLevel").textContent = data.riskLevel || "-";
+      document.querySelector("#riskScore").textContent = data.riskScore ?? "-";
+      document.querySelector("#recommendedAction").textContent = data.recommendedAction || "-";
+    }
+
+    function applySample(sample) {
+      fields.userInput.value = sample.userInput;
+      fields.toolName.value = sample.toolName;
+      fields.retryCount.value = sample.retryCount;
+      fields.policyViolation.checked = sample.policyViolation;
+      fields.externalApiCall.checked = sample.externalApiCall;
+      fields.toolError.checked = sample.toolError;
+      fields.approvalRequired.checked = sample.approvalRequired;
+      fields.dbWrite.checked = sample.dbWrite;
+    }
+  </script>
+</body>
+</html>

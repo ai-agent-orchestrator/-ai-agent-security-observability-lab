@@ -8,6 +8,20 @@ It now contains executable Spring Boot code, not only notes:
 spring/guardrail-ready-policy-checker
 ```
 
+Frontend metric reaction prototype:
+
+```text
+docs/frontend/metric-reaction-prototype.html
+```
+
+The prototype calls:
+
+```text
+POST http://localhost:8080/api/agent/risk/analyze
+```
+
+and displays the backend risk decision as a simple frontend reaction message.
+
 The main idea:
 
 ```text
