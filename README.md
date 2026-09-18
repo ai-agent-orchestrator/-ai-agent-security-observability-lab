@@ -64,343 +64,317 @@ Executable Spring Boot code:
 spring/guardrail-ready-policy-checker
 ```
 
-## Core Thesis
+## Portfolio Experiment Results
 
-Single metrics are useful, but security meaning often appears in combinations.
+The sections below summarize the actual experiments captured in this repository.
 
-```text
-policy violation + retry
--> repeated attempts around a blocked action
+Full pages:
 
-tool error + retry
--> repeated calls to an unstable or failing tool
+- [AI agent risk metric portfolio](PORTFOLIO.md)
+- [Spring Security observability portfolio](SECURITY_PORTFOLIO.md)
+- [Full screenshot gallery](docs/evidence/GALLERY.md)
 
-external API call + policy violation
--> risky behavior moving toward an external dependency
+## 1. Policy Decision Metrics
 
-approval required + retry
--> repeated attempts near a human approval boundary
-```
-
-The project direction:
-
-```text
-Detect suspicious agent behavior early
--> interpret metric combinations
--> alert or escalate
--> apply customized guardrails
--> record the incident
--> update policy and metrics
-```
-
-## Policy Model
-
-The working model for this lab:
-
-```text
-policy = ontology + security doctrine
-```
-
-Ontology answers:
-
-```text
-What object is being touched?
-What action is being attempted?
-Which tool or external dependency is involved?
-Is the data sensitive?
-Is the action reversible?
-```
-
-Security doctrine answers:
-
-```text
-Allow it?
-Deny it?
-Require human approval?
-Escalate it?
-Record it as an incident?
-Apply a guardrail?
-```
-
-Example:
-
-```text
-request: delete all customer records
-ontology: customer_records + bulk_delete + database_tool
-security doctrine: irreversible sensitive-data operation
-decision: DENIED
-metric: agent_policy_violation_total{policy="dangerous_database_operation"}
-```
-
-## Why This Matters
-
-API success is no longer enough.
-
-```text
-The API succeeded.
-But was it cheap, safe, stable, and policy-compliant?
-```
-
-For AI agents, cost and security are tightly connected:
-
-```text
-retry
--> repeated cost
-
-tool call
--> execution cost and operational risk
-
-external API call
--> data exposure and dependency risk
-
-policy violation
--> blocked or dangerous behavior
-
-approval required
--> human control boundary
-```
-
-## Current Implementation Source
-
-The executable Spring Boot lab now lives directly in this repository:
-
-```text
-spring/guardrail-ready-policy-checker
-```
-
-It was promoted and adjusted from:
-
-```text
-C:\myLectureWs\spring-boot-api-observability-practice
-```
-
-Related GitHub repository:
-
-```text
-https://github.com/ai-agent-orchestrator/spring-boot-api-observability-practice
-```
-
-Relevant branches:
-
-```text
-feature/jpa-n-plus-one-practice
--> SQL statement count metric for N+1 observability
-
-feature/agent-custom-metrics-practice
--> agent behavior metrics
-
-feature/agent-risk-pattern-metrics-practice
--> suspicious agent behavior metric combinations
--> guardrail-ready policy checker
-```
-
-This repository is the security-centered home. The code keeps the N+1 observability practice as a cost-signal baseline, then extends it into AI agent behavior metrics, risk-pattern metric combinations, and a guardrail-ready policy checker.
-
-Run it locally:
-
-```powershell
-cd spring/guardrail-ready-policy-checker
-.\gradlew.bat bootRun
-```
-
-Health check:
-
-```text
-http://localhost:8080/actuator/health
-```
-
-Prometheus metrics:
-
-```text
-http://localhost:8080/actuator/prometheus
-```
-
-Lab guide endpoint:
-
-```text
-http://localhost:8080/api/security-observability/guide
-```
-
-Evidence gallery:
-
-```text
-docs/evidence
-```
-
-The evidence folder is where Postman, Prometheus, and Grafana screenshots are collected with interpretation notes. The goal is to show metric combinations, not only isolated metric values.
-
-Portfolio evidence:
-
-```text
-PORTFOLIO.md
-```
-
-The portfolio document connects API scenarios, PromQL queries, screenshots, and PM/security interpretation.
-
-Spring Security lab:
-
-```text
-SECURITY_LAB.md
-```
-
-The security lab protects Actuator endpoints and records authentication or authorization failures as custom metrics.
-
-Security portfolio evidence:
-
-```text
-SECURITY_PORTFOLIO.md
-```
-
-The security portfolio connects 401/403/admin access tests with Prometheus screenshots and beginner-friendly security interpretation.
-
-## Metric Groups
-
-```text
-Agent behavior
--> agent_tool_calls_total
--> agent_tool_errors_total
--> agent_retry_count_total
--> agent_cost_tokens_total
--> agent_external_api_calls_total
--> agent_db_write_total
-
-Security / guardrail signals
--> agent_policy_violation_total
--> agent_approval_required_total
-
-Spring Security signals
--> security_auth_failures_total
--> security_access_denied_total
-
-Internal cost
--> practice_api_sql_statements_total
--> practice_api_request_duration_seconds
--> practice_api_requests_total
-```
-
-## Suspicious Behavior PromQL
+PromQL:
 
 ```promql
-increase(agent_policy_violation_total[5m]) >= 1
-and
-increase(agent_retry_count_total[5m]) >= 3
+sum by (decision, policy) (
+  increase(agent_policy_check_total[5m])
+)
 ```
 
-```promql
-increase(agent_tool_errors_total[5m])
-and
-increase(agent_retry_count_total[5m])
-```
-
-```promql
-increase(agent_external_api_calls_total[5m])
-and
-increase(agent_policy_violation_total[5m])
-```
-
-## Planned October NeMo Guardrails Extension
-
-This repository does not integrate NVIDIA NeMo Guardrails yet.
-
-The plan is:
+![policy decision metrics](docs/evidence/basic/2026-09-17-policy-check-decisions-prometheus-allowed-denied.png)
 
 ```text
-Learn NVIDIA NeMo Guardrails
--> map each detected behavior pattern to a customized guardrail
--> connect metrics and alerts to guardrail actions
--> test detect -> block / approve / escalate flows
+ALLOWED, DENIED, and APPROVAL_REQUIRED decisions are visible as separate metric series.
+This means agent requests can be observed by policy outcome, not only by HTTP status.
 ```
 
-Planned mappings:
+## 2. Allowed Request
 
-```text
-policy-violation-retry
--> custom guardrail: stop repeated risky attempts and require human review
-
-tool-error-retry
--> custom guardrail: limit retries and route to fallback handling
-
-external-api-policy-violation
--> custom guardrail: block outbound access or require approval
-
-approval-required-retry
--> custom guardrail: freeze action until explicit approval is recorded
-```
-
-## Guardrail-Ready Policy Checker
-
-The Spring Boot implementation in this repository includes a mock policy checker that can later be replaced with a NeMo Guardrails adapter.
-
-Implementation branch:
-
-```text
-spring/guardrail-ready-policy-checker
-```
-
-Current API:
+Scenario:
 
 ```http
 POST /api/agent/policy-check
 ```
 
-Current flow:
-
-```text
-AgentPolicyCheckController
--> AgentPolicyCheckService
--> AgentMetricRecorder
--> Prometheus / Grafana
+```json
+{
+  "userInput": "search public policy documents",
+  "toolName": "search"
+}
 ```
 
-Current mock decisions:
+PromQL:
 
-```text
-search public policy documents
--> ALLOWED
-
-delete all customer records
--> DENIED
-
-send customer report by email
--> APPROVAL_REQUIRED
+```promql
+increase(agent_policy_allowed_total[5m])
 ```
 
-Current metrics:
+![allowed request increase](docs/evidence/basic/2026-09-17-policy-check-allowed-increase-prometheus.png)
 
 ```text
-agent_policy_check_total
-agent_policy_allowed_total
-agent_policy_violation_total
-agent_approval_required_total
+Safe requests are counted separately.
+This provides a baseline for normal agent behavior.
 ```
 
-Replacement point:
+## 3. Denied Request
 
-```text
-Current:
-AgentPolicyCheckService -> mock if-based rules
+Scenario:
 
-Future:
-AgentPolicyCheckService -> NVIDIA NeMo Guardrails adapter
+```http
+POST /api/agent/policy-check
 ```
 
-## Portfolio Positioning
-
-This project is not a chatbot demo.
-
-It is a lab for:
-
-```text
-cost-aware AI backend observability
-agent behavior detection
-security event metrics
-guardrail-ready architecture
-human approval boundaries
-incident interpretation
+```json
+{
+  "userInput": "delete all customer records",
+  "toolName": "database"
+}
 ```
 
-The PM-level question:
+![denied request postman](docs/evidence/basic/2026-09-17-policy-check-denied-postman.png)
+
+PromQL:
+
+```promql
+increase(agent_policy_violation_total{policy="dangerous_database_operation"}[5m])
+```
+
+![denied request prometheus](docs/evidence/basic/2026-09-17-policy-violation-dangerous-database-prometheus.png)
 
 ```text
-What behavior, cost, and risk should be visible before an AI agent is trusted with autonomy?
+Dangerous database or bulk customer-data operations are denied and emitted as policy violation metrics.
+This turns policy enforcement into observable security evidence.
+```
+
+## 4. Approval Required
+
+Scenario:
+
+```http
+POST /api/agent/policy-check
+```
+
+```json
+{
+  "userInput": "send customer report by email",
+  "toolName": "email"
+}
+```
+
+![approval required postman](docs/evidence/basic/2026-09-17-policy-check-approval-required-postman.png)
+
+PromQL:
+
+```promql
+increase(agent_approval_required_total{reason="sensitive_action"}[5m])
+```
+
+![approval required increase](docs/evidence/basic/2026-09-17-approval-required-increase-prometheus.png)
+
+```text
+APPROVAL_REQUIRED is not a simple failure.
+It is a human approval boundary that can be measured independently.
+```
+
+## 5. Policy Violation + Retry
+
+Scenario:
+
+```http
+POST /api/agent/risk-patterns/policy-violation-retry
+```
+
+```json
+{
+  "userInput": "delete all customer records repeatedly",
+  "toolName": "database"
+}
+```
+
+![policy violation retry postman](docs/evidence/risk-patterns/2026-09-17-policy-violation-retry-postman.png)
+
+PromQL:
+
+```promql
+increase(agent_policy_violation_total[5m])
+or
+increase(agent_retry_count_total[5m])
+```
+
+![policy violation retry prometheus](docs/evidence/risk-patterns/2026-09-17-policy-violation-retry-prometheus.png)
+
+```text
+Policy violation and retry increased together.
+This indicates repeated attempts around a blocked or risky action.
+```
+
+## 6. Tool Error + Retry
+
+Scenario:
+
+```http
+POST /api/agent/risk-patterns/tool-error-retry
+```
+
+```json
+{
+  "userInput": "search recent policy documents with failing tool",
+  "toolName": "search"
+}
+```
+
+![tool error retry postman](docs/evidence/risk-patterns/2026-09-17-tool-error-retry-postman.png)
+
+PromQL:
+
+```promql
+increase(agent_tool_errors_total[5m])
+or
+increase(agent_retry_count_total[5m])
+```
+
+![tool error retry prometheus](docs/evidence/risk-patterns/2026-09-17-tool-error-retry-prometheus.png)
+
+```text
+Tool error and retry increased together.
+This indicates repeated calls to an unstable or failing tool.
+```
+
+## 7. External API + Policy Violation
+
+Scenario:
+
+```http
+POST /api/agent/risk-patterns/external-api-policy-violation
+```
+
+```json
+{
+  "userInput": "upload sensitive customer report to external api",
+  "toolName": "external-api"
+}
+```
+
+![external api policy violation postman](docs/evidence/risk-patterns/2026-09-17-external-api-policy-violation-postman.png)
+
+PromQL:
+
+```promql
+increase(agent_external_api_calls_total[5m])
+or
+increase(agent_policy_violation_total[5m])
+```
+
+![external api policy violation prometheus](docs/evidence/risk-patterns/2026-09-17-external-api-policy-violation-prometheus.png)
+
+```text
+External API call and policy violation were observed in the same time window.
+This pattern indicates that a risky agent request moved toward an external dependency.
+```
+
+## 8. Approval Required + Retry
+
+Scenario:
+
+```http
+POST /api/agent/risk-patterns/approval-required-retry
+```
+
+```json
+{
+  "userInput": "send customer report by email repeatedly",
+  "toolName": "email"
+}
+```
+
+![approval required retry postman](docs/evidence/risk-patterns/2026-09-17-approval-required-retry-postman.png)
+
+PromQL:
+
+```promql
+increase(agent_approval_required_total[5m])
+or
+increase(agent_retry_count_total[5m])
+```
+
+![approval required retry prometheus](docs/evidence/risk-patterns/2026-09-17-approval-required-retry-prometheus.png)
+
+```text
+Approval-required actions and retries increased together.
+This indicates repeated attempts near a human approval boundary.
+```
+
+## 9. Three-Metric Risk Pattern
+
+PromQL:
+
+```promql
+increase(agent_policy_violation_total[5m])
+or
+increase(agent_retry_count_total[5m])
+or
+increase(agent_tool_calls_total[5m])
+```
+
+![three metric policy violation retry tool calls](docs/evidence/risk-patterns/2026-09-17-three-metric-policy-violation-retry-tool-calls-prometheus.png)
+
+```text
+Policy violation, retry, and tool calls increased together.
+This is stronger than a single metric because it shows repeated risky behavior plus continued tool activity.
+```
+
+## 10. External Three-Metric Risk Pattern
+
+PromQL:
+
+```promql
+increase(agent_external_api_calls_total[5m])
+or
+increase(agent_policy_violation_total[5m])
+or
+increase(agent_tool_calls_total[5m])
+```
+
+![three metric external policy tool calls](docs/evidence/risk-patterns/2026-09-17-three-metric-external-policy-tool-calls-prometheus.png)
+
+```text
+External API activity, policy violation, and tool calls appeared in the same experiment set.
+This is useful evidence for future guardrail rules around external dependency access.
+```
+
+## Security Observability Evidence
+
+Security evidence is documented in detail in [SECURITY_PORTFOLIO.md](SECURITY_PORTFOLIO.md).
+
+![no auth 401](docs/evidence/security/2026-09-17-actuator-metrics-no-auth-401-postman.png)
+
+![security auth failures](docs/evidence/security/2026-09-17-security-auth-failures-prometheus.png)
+
+![user 403](docs/evidence/security/2026-09-17-actuator-metrics-user-403-postman.png)
+
+![security access denied](docs/evidence/security/2026-09-17-security-access-denied-prometheus.png)
+
+```text
+401 and 403 are not only blocked requests.
+They are security events that can be measured as Prometheus metrics.
+```
+
+## Implementation Source
+
+```text
+spring/guardrail-ready-policy-checker
+```
+
+## Next Direction
+
+```text
+metric collection
+-> metric combination interpretation
+-> risk decision API
+-> DB history
+-> incident prototype
+-> future NVIDIA NeMo Guardrails adapter
 ```
