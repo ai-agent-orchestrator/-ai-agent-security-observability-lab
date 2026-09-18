@@ -388,3 +388,82 @@ Service에서 위험 신호를 해석하고,
 metric과 JPA history로 남긴 뒤,
 guardrail-ready decision을 JSON으로 반환한다.
 ```
+
+## 13. Java 21 Virtual Thread Async Agent Job
+
+```mermaid
+flowchart TD
+    A[POST /api/agent/jobs] --> B[Create AgentJobHistory PENDING]
+    B --> C[Return jobId]
+    B --> D[Virtual Thread Start]
+    D --> E[Set Job RUNNING]
+    E --> F[AgentRiskDecisionService analyze]
+    F --> G[Record Metrics]
+    F --> H[Save Risk History]
+    F --> I[Save Run History]
+    F --> J[Set Job COMPLETED]
+    J --> K[GET /api/agent/jobs/{jobId}]
+    K --> L[Return Job Status JSON]
+```
+
+Why this matters:
+
+```text
+AI agent work can wait on LLM calls, external APIs, tools, and DB operations.
+Java 21 virtual threads are useful for this waiting-heavy backend workload.
+```
+
+Synchronous API:
+
+```text
+POST /api/agent/risk/analyze
+-> immediate risk decision response
+```
+
+Asynchronous job API:
+
+```text
+POST /api/agent/jobs
+-> returns jobId immediately
+-> risk analysis runs on a virtual thread
+-> client checks status with GET /api/agent/jobs/{jobId}
+```
+
+## 14. Frontend Async Connection
+
+```mermaid
+flowchart TD
+    A[React Form Submit] --> B[Build JSON Request]
+    B --> C[fetch POST /api/agent/jobs]
+    C --> D[Receive jobId]
+    D --> E[Set UI status PENDING]
+    E --> F[Polling GET /api/agent/jobs/{jobId}]
+    F --> G{Job Status}
+    G -->|RUNNING| H[Keep Loading]
+    G -->|COMPLETED| I[Show Risk Decision]
+    G -->|FAILED| J[Show Error]
+```
+
+Frontend async concepts:
+
+```text
+state
+-> stores jobId, status, loading, result, error
+
+fetch
+-> sends JSON to the backend
+
+async await
+-> waits for HTTP responses
+
+polling
+-> repeats GET requests until the job is completed or failed
+```
+
+Important correction:
+
+```text
+CSS does not handle async API calls.
+JavaScript or React handles async API calls.
+CSS only styles loading states, result cards, and status badges.
+```

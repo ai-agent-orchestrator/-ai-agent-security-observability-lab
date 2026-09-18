@@ -553,6 +553,11 @@ Implemented additions:
 
 7. Policy Rule Separation
 -> AgentRiskPolicyRule separates keyword-based policy rules from the service flow.
+
+8. Java 21 Virtual Thread Async Agent Job
+-> POST /api/agent/jobs returns a jobId immediately.
+-> The risk analysis runs on a Java 21 virtual thread.
+-> GET /api/agent/jobs/{jobId} returns PENDING, RUNNING, COMPLETED, or FAILED.
 ```
 
 Backend map:
@@ -577,6 +582,33 @@ Spring REST API
 + Prometheus observability
 + security event tracking
 + React-ready JSON APIs
++ Java 21 virtual thread async jobs
+```
+
+Async agent job APIs:
+
+```http
+POST /api/agent/jobs
+GET /api/agent/jobs/{jobId}
+GET /api/agent/jobs
+```
+
+Async flow:
+
+```text
+POST /api/agent/jobs
+-> save PENDING job
+-> return jobId
+-> run AgentRiskDecisionService on a virtual thread
+-> save COMPLETED or FAILED status
+-> frontend or Postman checks status by jobId
+```
+
+Why virtual threads fit this project:
+
+```text
+AI agent servers often wait for LLM APIs, external APIs, tool calls, and DB operations.
+Java 21 virtual threads make this waiting-heavy backend flow easier to model without making WebSocket the center of the project.
 ```
 
 ## Architecture Explanation for Portfolio
