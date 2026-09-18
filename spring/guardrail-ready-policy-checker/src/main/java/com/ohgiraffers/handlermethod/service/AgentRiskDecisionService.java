@@ -2,8 +2,11 @@ package com.ohgiraffers.handlermethod.service;
 
 import com.ohgiraffers.handlermethod.dto.AgentRiskAnalyzeRequest;
 import com.ohgiraffers.handlermethod.dto.AgentRiskAnalyzeResponse;
+import com.ohgiraffers.handlermethod.entity.AgentRunHistory;
 import com.ohgiraffers.handlermethod.entity.AgentRiskHistory;
+import com.ohgiraffers.handlermethod.repository.AgentRunHistoryRepository;
 import com.ohgiraffers.handlermethod.repository.AgentRiskHistoryRepository;
+import com.ohgiraffers.handlermethod.risk.AgentRiskPolicyRule;
 import com.ohgiraffers.handlermethod.risk.AgentRiskDecision;
 import com.ohgiraffers.handlermethod.risk.AgentRiskLevel;
 import com.ohgiraffers.handlermethod.risk.AgentRiskSignal;
@@ -22,11 +25,14 @@ public class AgentRiskDecisionService {
 
     private final AgentMetricRecorder agentMetricRecorder;
     private final AgentRiskHistoryRepository agentRiskHistoryRepository;
+    private final AgentRunHistoryRepository agentRunHistoryRepository;
 
     public AgentRiskDecisionService(AgentMetricRecorder agentMetricRecorder,
-                                    AgentRiskHistoryRepository agentRiskHistoryRepository) {
+                                    AgentRiskHistoryRepository agentRiskHistoryRepository,
+                                    AgentRunHistoryRepository agentRunHistoryRepository) {
         this.agentMetricRecorder = agentMetricRecorder;
         this.agentRiskHistoryRepository = agentRiskHistoryRepository;
+        this.agentRunHistoryRepository = agentRunHistoryRepository;
     }
 
     @Transactional
@@ -38,16 +44,15 @@ public class AgentRiskDecisionService {
         int completionTokens = positiveOrDefault(request == null ? null : request.completionTokens(), 80);
 
         boolean policyViolation = flag(request == null ? null : request.policyViolation())
-                || containsAny(userInput, "delete", "customer records", "sensitive", "blocked");
+                || AgentRiskPolicyRule.POLICY_VIOLATION.matches(userInput, toolName);
         boolean toolError = flag(request == null ? null : request.toolError())
-                || containsAny(userInput, "failing tool", "tool error", "unstable");
+                || AgentRiskPolicyRule.TOOL_ERROR.matches(userInput, toolName);
         boolean externalApiCall = flag(request == null ? null : request.externalApiCall())
-                || containsAny(toolName, "external")
-                || containsAny(userInput, "external api", "upload");
+                || AgentRiskPolicyRule.EXTERNAL_API_CALL.matches(userInput, toolName);
         boolean approvalRequired = flag(request == null ? null : request.approvalRequired())
-                || containsAny(userInput, "email", "send customer report", "approval");
+                || AgentRiskPolicyRule.APPROVAL_REQUIRED.matches(userInput, toolName);
         boolean dbWrite = flag(request == null ? null : request.dbWrite())
-                || containsAny(toolName, "database", "db");
+                || AgentRiskPolicyRule.DB_WRITE.matches(userInput, toolName);
 
         List<AgentRiskSignal> signals = new ArrayList<>();
         int riskScore = 0;
@@ -116,6 +121,15 @@ public class AgentRiskDecisionService {
                 traceId
         );
         AgentRiskHistory savedHistory = agentRiskHistoryRepository.save(history);
+        agentRunHistoryRepository.save(AgentRunHistory.create(
+                userInput,
+                toolName,
+                retryCount,
+                promptTokens + completionTokens,
+                decision.name(),
+                boundedRiskScore,
+                traceId
+        ));
 
         return new AgentRiskAnalyzeResponse(
                 decision.name(),
@@ -202,21 +216,6 @@ public class AgentRiskDecisionService {
         }
 
         return RecommendedAction.ALLOW;
-    }
-
-    private boolean containsAny(String value, String... keywords) {
-        if (value == null || value.isBlank()) {
-            return false;
-        }
-
-        String normalized = value.toLowerCase();
-        for (String keyword : keywords) {
-            if (normalized.contains(keyword)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private boolean flag(Boolean value) {

@@ -524,6 +524,61 @@ Future:
 AgentRiskDecisionService -> NeMo Guardrails adapter / policy runtime
 ```
 
+## Project-Ready Backend Additions
+
+This branch turns the lab into a project-ready backend prototype.
+
+Implemented additions:
+
+```text
+1. Agent Run History
+-> agent_run_history records each analyzed agent run.
+
+2. Risk Score Calculation
+-> AgentRiskDecisionService calculates riskScore and riskLevel.
+
+3. Risk Pattern API
+-> POST /api/agent/risk/analyze converts behavior signals into a risk decision.
+
+4. Security Event History
+-> security_event_history records 401 authentication failures and 403 access denied events.
+
+5. Admin Dashboard API
+-> GET /api/admin/dashboard/summary
+-> GET /api/admin/dashboard/security-events
+
+6. Guardrail Adapter Interface
+-> GuardrailDecisionClient is the future replacement point for NeMo Guardrails.
+-> RuleBasedGuardrailDecisionClient is the current mock/rule-based implementation.
+
+7. Policy Rule Separation
+-> AgentRiskPolicyRule separates keyword-based policy rules from the service flow.
+```
+
+Backend map:
+
+```text
+JSON request
+-> DTO
+-> risk policy rules
+-> risk score / decision
+-> metric record
+-> JPA history save
+-> admin summary API
+-> future NeMo Guardrails adapter
+```
+
+This keeps the project aligned with the class requirements:
+
+```text
+Spring REST API
++ JPA / SQL history
++ business logic validation
++ Prometheus observability
++ security event tracking
++ React-ready JSON APIs
+```
+
 ## Portfolio Positioning
 
 This project is not a chatbot demo.
