@@ -8,6 +8,25 @@ It now contains executable Spring Boot code, not only notes:
 spring/guardrail-ready-policy-checker
 ```
 
+## Portfolio Evidence First
+
+This lab includes direct experiment evidence from Postman-triggered API scenarios and Prometheus metric queries.
+
+- [AI agent risk metric portfolio](PORTFOLIO.md)
+- [Spring Security observability portfolio](SECURITY_PORTFOLIO.md)
+- [Evidence gallery](docs/evidence/README.md)
+
+Representative Prometheus evidence:
+
+![three metric agent risk pattern](docs/evidence/risk-patterns/2026-09-17-three-metric-policy-violation-retry-tool-calls-prometheus.png)
+
+![external api policy violation](docs/evidence/risk-patterns/2026-09-17-external-api-policy-violation-prometheus.png)
+
+```text
+Success is not enough.
+AI agent risk appears in behavior metrics, not only in the response body.
+```
+
 The main idea:
 
 ```text
