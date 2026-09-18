@@ -1,46 +1,51 @@
 # AI Agent Security Observability Lab
 
-This repository is a security-focused lab for detecting suspicious AI agent behavior through custom metrics, Prometheus, Grafana, and future guardrail integration.
+This repository records hands-on experiments for AI agent security observability.
 
-It now contains executable Spring Boot code, not only notes:
+The focus is direct evidence:
 
 ```text
-spring/guardrail-ready-policy-checker
+Postman request
+-> Spring Boot custom metric
+-> Prometheus query
+-> screenshot evidence
+-> security interpretation
 ```
 
-## Portfolio Evidence First
+## Experiment Evidence
 
-This lab includes direct experiment evidence from Postman-triggered API scenarios and Prometheus metric queries.
-
+- [Full screenshot gallery](docs/evidence/GALLERY.md)
 - [AI agent risk metric portfolio](PORTFOLIO.md)
 - [Spring Security observability portfolio](SECURITY_PORTFOLIO.md)
-- [Full screenshot gallery](docs/evidence/GALLERY.md)
 - [Evidence notes](docs/evidence/README.md)
 
-Representative preview only:
+Representative results:
 
 ![three metric agent risk pattern](docs/evidence/risk-patterns/2026-09-17-three-metric-policy-violation-retry-tool-calls-prometheus.png)
 
+```text
+policy violation + retry + tool calls increased together.
+This means the agent repeatedly approached a blocked action while continuing tool activity.
+```
+
 ![external api policy violation](docs/evidence/risk-patterns/2026-09-17-external-api-policy-violation-prometheus.png)
 
-The full portfolio pages show the complete experiment set:
-
 ```text
-PORTFOLIO.md -> agent risk / policy / retry / external API / tool error evidence
-SECURITY_PORTFOLIO.md -> 401 / 403 / admin access security observability evidence
-docs/evidence/GALLERY.md -> all captured screenshots in one page
+External API call and policy violation were observed in the same time window.
+This pattern indicates that a risky agent request moved toward an external dependency.
 ```
 
-```text
-Success is not enough.
-AI agent risk appears in behavior metrics, not only in the response body.
-```
-
-The main idea:
+Conclusion:
 
 ```text
 AI agent security is not only about the final answer.
 It is about what the agent repeatedly tried to do, which tools it called, where it failed, and whether it approached risky actions.
+```
+
+Executable Spring Boot code:
+
+```text
+spring/guardrail-ready-policy-checker
 ```
 
 ## Core Thesis
