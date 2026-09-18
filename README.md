@@ -14,13 +14,22 @@ This lab includes direct experiment evidence from Postman-triggered API scenario
 
 - [AI agent risk metric portfolio](PORTFOLIO.md)
 - [Spring Security observability portfolio](SECURITY_PORTFOLIO.md)
-- [Evidence gallery](docs/evidence/README.md)
+- [Full screenshot gallery](docs/evidence/GALLERY.md)
+- [Evidence notes](docs/evidence/README.md)
 
-Representative Prometheus evidence:
+Representative preview only:
 
 ![three metric agent risk pattern](docs/evidence/risk-patterns/2026-09-17-three-metric-policy-violation-retry-tool-calls-prometheus.png)
 
 ![external api policy violation](docs/evidence/risk-patterns/2026-09-17-external-api-policy-violation-prometheus.png)
+
+The full portfolio pages show the complete experiment set:
+
+```text
+PORTFOLIO.md -> agent risk / policy / retry / external API / tool error evidence
+SECURITY_PORTFOLIO.md -> 401 / 403 / admin access security observability evidence
+docs/evidence/GALLERY.md -> all captured screenshots in one page
+```
 
 ```text
 Success is not enough.
