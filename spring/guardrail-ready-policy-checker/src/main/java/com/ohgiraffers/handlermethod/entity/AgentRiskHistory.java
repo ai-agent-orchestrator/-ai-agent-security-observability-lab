@@ -98,4 +98,44 @@ public class AgentRiskHistory {
     public Long getId() {
         return id;
     }
+
+    public String getUserInput() {
+        return userInput;
+    }
+
+    public String getToolName() {
+        return toolName;
+    }
+
+    public String getDecision() {
+        return decision;
+    }
+
+    public int getRiskScore() {
+        return riskScore;
+    }
+
+    public String getRiskLevel() {
+        return riskLevel;
+    }
+
+    public String getSignals() {
+        return signals;
+    }
+
+    public String getRecommendedAction() {
+        return recommendedAction;
+    }
+
+    public boolean isGuardrailReady() {
+        return guardrailReady;
+    }
+
+    public String getTraceId() {
+        return traceId;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 }

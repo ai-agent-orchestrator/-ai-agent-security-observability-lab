@@ -461,6 +461,59 @@ Prometheus shows behavior volume.
 DB history preserves the interpreted incident-like decision.
 ```
 
+History APIs:
+
+```http
+GET /api/agent/risk/history
+GET /api/agent/risk/history?riskLevel=HIGH
+GET /api/agent/risk/history?decision=HIGH_RISK_AGENT_BEHAVIOR
+GET /api/agent/risk/summary
+```
+
+Why JPA history matters:
+
+```text
+Prometheus
+-> how many times did a signal increase?
+
+JPA / DB history
+-> which request received which risk decision?
+```
+
+This connects JPA and observability:
+
+```text
+AgentRiskHistory is not a simple CRUD table.
+It is an audit-like event record for AI agent risk decisions.
+```
+
+SQL examples:
+
+```sql
+select *
+from agent_risk_history
+order by created_at desc;
+```
+
+```sql
+select *
+from agent_risk_history
+where risk_level = 'HIGH'
+order by created_at desc;
+```
+
+```sql
+select decision, count(*)
+from agent_risk_history
+group by decision;
+```
+
+```sql
+select recommended_action, count(*)
+from agent_risk_history
+group by recommended_action;
+```
+
 Future NeMo connection:
 
 ```text
