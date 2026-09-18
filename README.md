@@ -380,7 +380,7 @@ Example response:
   "signals": [
     "POLICY_VIOLATION",
     "RETRY",
-    "EXTERNAL_API"
+    "EXTERNAL_API_CALL"
   ],
   "recommendedAction": "BLOCK_AND_ESCALATE",
   "guardrailReady": true,
@@ -394,7 +394,7 @@ Decision map:
 ```text
 POLICY_VIOLATION + RETRY
 -> SUSPICIOUS_RETRY
--> BLOCK_OR_REQUIRE_APPROVAL
+-> BLOCK
 
 POLICY_VIOLATION + EXTERNAL_API
 -> RISKY_EXTERNAL_ACCESS
@@ -410,7 +410,29 @@ TOOL_ERROR + RETRY
 
 APPROVAL_REQUIRED + RETRY
 -> APPROVAL_BYPASS_RISK
--> BLOCK_OR_REQUIRE_APPROVAL
+-> REQUIRE_APPROVAL
+```
+
+Recommended actions:
+
+```text
+ALLOW
+-> continue the agent request
+
+REQUIRE_APPROVAL
+-> pause execution until a human approves the action
+
+BLOCK
+-> block the risky request
+
+BLOCK_AND_ESCALATE
+-> block immediately and escalate as a high-risk event
+
+DISABLE_TOOL_TEMPORARILY
+-> stop using an unstable or repeatedly failing tool
+
+CREATE_INCIDENT
+-> create an incident record for operator review
 ```
 
 PromQL examples:

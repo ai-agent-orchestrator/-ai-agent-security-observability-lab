@@ -4,6 +4,10 @@ import com.ohgiraffers.handlermethod.dto.AgentRiskAnalyzeRequest;
 import com.ohgiraffers.handlermethod.dto.AgentRiskAnalyzeResponse;
 import com.ohgiraffers.handlermethod.entity.AgentRiskHistory;
 import com.ohgiraffers.handlermethod.repository.AgentRiskHistoryRepository;
+import com.ohgiraffers.handlermethod.risk.AgentRiskDecision;
+import com.ohgiraffers.handlermethod.risk.AgentRiskLevel;
+import com.ohgiraffers.handlermethod.risk.AgentRiskSignal;
+import com.ohgiraffers.handlermethod.risk.RecommendedAction;
 import com.ohgiraffers.handlermethod.support.AgentMetricRecorder;
 import com.ohgiraffers.handlermethod.support.TraceContext;
 import org.springframework.stereotype.Service;
@@ -11,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AgentRiskDecisionService {
@@ -44,147 +49,159 @@ public class AgentRiskDecisionService {
         boolean dbWrite = flag(request == null ? null : request.dbWrite())
                 || containsAny(toolName, "database", "db");
 
-        List<String> signals = new ArrayList<>();
+        List<AgentRiskSignal> signals = new ArrayList<>();
         int riskScore = 0;
 
         if (policyViolation) {
-            signals.add("POLICY_VIOLATION");
+            signals.add(AgentRiskSignal.POLICY_VIOLATION);
             riskScore += 40;
             agentMetricRecorder.recordPolicyViolation("risk_decision_policy_violation");
         }
 
         if (retryCount > 0) {
-            signals.add("RETRY");
+            signals.add(AgentRiskSignal.RETRY);
             riskScore += Math.min(retryCount * 8, 25);
             agentMetricRecorder.recordRetryCount(retryCount);
         }
 
         if (externalApiCall) {
-            signals.add("EXTERNAL_API");
+            signals.add(AgentRiskSignal.EXTERNAL_API_CALL);
             riskScore += 25;
             agentMetricRecorder.recordExternalApiCall("risk-decision-external-api", policyViolation ? "risky" : "called");
         }
 
         if (toolError) {
-            signals.add("TOOL_ERROR");
+            signals.add(AgentRiskSignal.TOOL_ERROR);
             riskScore += 15;
             agentMetricRecorder.recordToolError(toolName, "risk_decision_tool_error");
         }
 
         if (approvalRequired) {
-            signals.add("APPROVAL_REQUIRED");
+            signals.add(AgentRiskSignal.APPROVAL_REQUIRED);
             riskScore += 20;
             agentMetricRecorder.recordApprovalRequired("risk_decision_approval_boundary");
         }
 
         if (dbWrite) {
-            signals.add("DB_WRITE");
+            signals.add(AgentRiskSignal.DB_WRITE);
             riskScore += 15;
             agentMetricRecorder.recordDbWrite("risk-decision-db", policyViolation ? "risky" : "attempted");
         }
 
         if (signals.isEmpty()) {
-            signals.add("SAFE_REQUEST");
+            signals.add(AgentRiskSignal.SAFE_REQUEST);
         }
 
         agentMetricRecorder.recordToolCall(toolName, "risk_decision_analyze");
         agentMetricRecorder.recordTokenCost(promptTokens, completionTokens);
 
         int boundedRiskScore = Math.min(riskScore, 100);
-        String riskLevel = riskLevel(boundedRiskScore);
-        String decision = decision(signals, boundedRiskScore);
-        String recommendedAction = recommendedAction(decision, riskLevel);
+        AgentRiskLevel riskLevel = riskLevel(boundedRiskScore);
+        AgentRiskDecision decision = decision(signals, boundedRiskScore);
+        RecommendedAction recommendedAction = recommendedAction(decision, riskLevel);
         String traceId = TraceContext.currentTraceId();
+        List<String> signalNames = signals.stream()
+                .map(Enum::name)
+                .collect(Collectors.toList());
 
         AgentRiskHistory history = AgentRiskHistory.create(
                 userInput,
                 toolName,
-                decision,
+                decision.name(),
                 boundedRiskScore,
-                riskLevel,
-                String.join(",", signals),
-                recommendedAction,
+                riskLevel.name(),
+                String.join(",", signalNames),
+                recommendedAction.name(),
                 true,
                 traceId
         );
         AgentRiskHistory savedHistory = agentRiskHistoryRepository.save(history);
 
         return new AgentRiskAnalyzeResponse(
-                decision,
+                decision.name(),
                 boundedRiskScore,
-                riskLevel,
-                signals,
-                recommendedAction,
+                riskLevel.name(),
+                signalNames,
+                recommendedAction.name(),
                 true,
                 savedHistory.getId(),
                 traceId
         );
     }
 
-    private String decision(List<String> signals, int riskScore) {
-        if (signals.contains("POLICY_VIOLATION")
-                && signals.contains("EXTERNAL_API")
-                && signals.contains("RETRY")) {
-            return "HIGH_RISK_AGENT_BEHAVIOR";
+    private AgentRiskDecision decision(List<AgentRiskSignal> signals, int riskScore) {
+        if (signals.contains(AgentRiskSignal.POLICY_VIOLATION)
+                && signals.contains(AgentRiskSignal.EXTERNAL_API_CALL)
+                && signals.contains(AgentRiskSignal.RETRY)) {
+            return AgentRiskDecision.HIGH_RISK_AGENT_BEHAVIOR;
         }
 
-        if (signals.contains("POLICY_VIOLATION") && signals.contains("EXTERNAL_API")) {
-            return "RISKY_EXTERNAL_ACCESS";
+        if (signals.contains(AgentRiskSignal.POLICY_VIOLATION)
+                && signals.contains(AgentRiskSignal.EXTERNAL_API_CALL)) {
+            return AgentRiskDecision.RISKY_EXTERNAL_ACCESS;
         }
 
-        if (signals.contains("POLICY_VIOLATION") && signals.contains("RETRY")) {
-            return "SUSPICIOUS_RETRY";
+        if (signals.contains(AgentRiskSignal.POLICY_VIOLATION)
+                && signals.contains(AgentRiskSignal.RETRY)) {
+            return AgentRiskDecision.SUSPICIOUS_RETRY;
         }
 
-        if (signals.contains("APPROVAL_REQUIRED") && signals.contains("RETRY")) {
-            return "APPROVAL_BYPASS_RISK";
+        if (signals.contains(AgentRiskSignal.APPROVAL_REQUIRED)
+                && signals.contains(AgentRiskSignal.RETRY)) {
+            return AgentRiskDecision.APPROVAL_BYPASS_RISK;
         }
 
-        if (signals.contains("TOOL_ERROR") && signals.contains("RETRY")) {
-            return "UNSTABLE_TOOL_LOOP";
+        if (signals.contains(AgentRiskSignal.TOOL_ERROR)
+                && signals.contains(AgentRiskSignal.RETRY)) {
+            return AgentRiskDecision.UNSTABLE_TOOL_LOOP;
         }
 
         if (riskScore >= 60) {
-            return "SUSPICIOUS";
+            return AgentRiskDecision.SUSPICIOUS;
         }
 
-        return "SAFE";
+        return AgentRiskDecision.SAFE;
     }
 
-    private String riskLevel(int riskScore) {
+    private AgentRiskLevel riskLevel(int riskScore) {
         if (riskScore >= 80) {
-            return "HIGH";
+            return AgentRiskLevel.HIGH;
         }
 
         if (riskScore >= 40) {
-            return "MEDIUM";
+            return AgentRiskLevel.MEDIUM;
         }
 
-        return "LOW";
+        return AgentRiskLevel.LOW;
     }
 
-    private String recommendedAction(String decision, String riskLevel) {
-        if ("HIGH_RISK_AGENT_BEHAVIOR".equals(decision) || "RISKY_EXTERNAL_ACCESS".equals(decision)) {
-            return "BLOCK_AND_ESCALATE";
+    private RecommendedAction recommendedAction(AgentRiskDecision decision, AgentRiskLevel riskLevel) {
+        if (decision == AgentRiskDecision.HIGH_RISK_AGENT_BEHAVIOR
+                || decision == AgentRiskDecision.RISKY_EXTERNAL_ACCESS) {
+            return RecommendedAction.BLOCK_AND_ESCALATE;
         }
 
-        if ("SUSPICIOUS_RETRY".equals(decision) || "APPROVAL_BYPASS_RISK".equals(decision)) {
-            return "BLOCK_OR_REQUIRE_APPROVAL";
+        if (decision == AgentRiskDecision.SUSPICIOUS_RETRY) {
+            return RecommendedAction.BLOCK;
         }
 
-        if ("UNSTABLE_TOOL_LOOP".equals(decision)) {
-            return "DISABLE_TOOL_TEMPORARILY";
+        if (decision == AgentRiskDecision.APPROVAL_BYPASS_RISK) {
+            return RecommendedAction.REQUIRE_APPROVAL;
         }
 
-        if ("HIGH".equals(riskLevel)) {
-            return "CREATE_INCIDENT";
+        if (decision == AgentRiskDecision.UNSTABLE_TOOL_LOOP) {
+            return RecommendedAction.DISABLE_TOOL_TEMPORARILY;
         }
 
-        if ("MEDIUM".equals(riskLevel)) {
-            return "REVIEW";
+        if (riskLevel == AgentRiskLevel.HIGH) {
+            return RecommendedAction.CREATE_INCIDENT;
         }
 
-        return "ALLOW";
+        if (riskLevel == AgentRiskLevel.MEDIUM) {
+            return RecommendedAction.REQUIRE_APPROVAL;
+        }
+
+        return RecommendedAction.ALLOW;
     }
 
     private boolean containsAny(String value, String... keywords) {
