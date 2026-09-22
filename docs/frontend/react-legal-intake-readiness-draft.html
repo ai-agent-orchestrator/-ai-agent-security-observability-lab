@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Legal Intake Readiness Draft</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #182230;
+      --muted: #667085;
+      --line: #d0d5dd;
+      --blue: #175cd3;
+      --green: #067647;
+      --green-bg: #ecfdf3;
+      --yellow: #b54708;
+      --yellow-bg: #fffaeb;
+      --red: #b42318;
+      --red-bg: #fff1f0;
+      --code: #101828;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, "Malgun Gothic", sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 30px 0 46px;
+    }
+
+    header {
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 7px;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    header p {
+      margin: 0;
+      max-width: 920px;
+      color: var(--muted);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 430px) 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input[type="text"],
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 11px;
+      color: var(--text);
+      background: #fff;
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+
+    .checks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .check-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #f9fafb;
+      font-weight: 400;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 13px;
+      color: #fff;
+      background: var(--blue);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .banner {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 16px;
+      background: #fff;
+    }
+
+    .banner.low {
+      border-color: #fecdca;
+      background: var(--red-bg);
+    }
+
+    .banner.medium {
+      border-color: #fedf89;
+      background: var(--yellow-bg);
+    }
+
+    .banner.high {
+      border-color: #abefc6;
+      background: var(--green-bg);
+    }
+
+    .banner strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 18px;
+    }
+
+    .banner p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .summary-item {
+      min-height: 74px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .summary-item span {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .summary-item strong {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+
+    pre {
+      min-height: 300px;
+      max-height: 560px;
+      margin: 0;
+      overflow: auto;
+      border-radius: 8px;
+      padding: 14px;
+      background: var(--code);
+      color: #e4e7ec;
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .flow {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #f9fafb;
+      color: #344054;
+      font-size: 13px;
+    }
+
+    @media (max-width: 880px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 540px) {
+      main {
+        width: min(100% - 20px, 1180px);
+        padding-top: 18px;
+      }
+
+      .checks,
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>React Legal Intake Readiness Draft</h1>
+      <p>
+        This draft reuses the same backend decision architecture:
+        AI agent risk decision -> legal case readiness decision.
+      </p>
+    </header>
+
+    <div id="root"></div>
+  </main>
+
+  <script type="text/babel">
+    const { useMemo, useState } = React;
+
+    const defaultForm = {
+      apiUrl: "http://localhost:8080/api/legal/intake/analyze",
+      caseType: "civil",
+      summary: "계약금 반환 문제로 상대방과 분쟁이 있고 카카오톡 대화와 이체내역은 보유함",
+      claimPurpose: "계약금 반환",
+      hasEvidence: true,
+      hasDeadline: true,
+      opponentKnown: true,
+      damageAmountKnown: false,
+      currentStage: "before_lawsuit",
+      urgent: false
+    };
+
+    function App() {
+      const [form, setForm] = useState(defaultForm);
+      const [result, setResult] = useState(null);
+      const [error, setError] = useState(null);
+      const [status, setStatus] = useState("idle");
+
+      async function analyze(event) {
+        event.preventDefault();
+        setStatus("loading");
+        setResult(null);
+        setError(null);
+
+        try {
+          const response = await fetch(form.apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(toRequestBody(form))
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+          setResult(data);
+          setStatus("success");
+        } catch (requestError) {
+          setError({
+            message: requestError.message,
+            hint: "Check that the Spring Boot server is running on port 8080."
+          });
+          setStatus("error");
+        }
+      }
+
+      function updateField(name, value) {
+        setForm((current) => ({
+          ...current,
+          [name]: value
+        }));
+      }
+
+      const rawJson = error || result || {};
+
+      return (
+        <div className="layout">
+          <IntakeForm
+            form={form}
+            loading={status === "loading"}
+            onSubmit={analyze}
+            onFieldChange={updateField}
+          />
+
+          <section>
+            <h2>Case Readiness Decision</h2>
+            <ReadinessBanner status={status} result={result} error={error} />
+            <ReadinessResult result={result} />
+            <pre>{JSON.stringify(rawJson, null, 2)}</pre>
+
+            <div className="flow">
+              Legal intake signal -> case signal -> readiness score
+              -> case readiness decision -> recommended next step -> intake history
+            </div>
+          </section>
+        </div>
+      );
+    }
+
+    function IntakeForm({ form, loading, onSubmit, onFieldChange }) {
+      return (
+        <section>
+          <h2>Legal Intake Draft</h2>
+          <form onSubmit={onSubmit}>
+            <label htmlFor="apiUrl">API URL</label>
+            <input
+              id="apiUrl"
+              type="text"
+              value={form.apiUrl}
+              onChange={(event) => onFieldChange("apiUrl", event.target.value)}
+            />
+
+            <label htmlFor="caseType">Case Type</label>
+            <select
+              id="caseType"
+              value={form.caseType}
+              onChange={(event) => onFieldChange("caseType", event.target.value)}
+            >
+              <option value="civil">civil</option>
+              <option value="criminal">criminal</option>
+              <option value="administrative">administrative</option>
+              <option value="family">family</option>
+            </select>
+
+            <label htmlFor="summary">Summary</label>
+            <textarea
+              id="summary"
+              value={form.summary}
+              onChange={(event) => onFieldChange("summary", event.target.value)}
+            />
+
+            <label htmlFor="claimPurpose">Claim Purpose</label>
+            <input
+              id="claimPurpose"
+              type="text"
+              value={form.claimPurpose}
+              onChange={(event) => onFieldChange("claimPurpose", event.target.value)}
+            />
+
+            <label htmlFor="currentStage">Current Stage</label>
+            <select
+              id="currentStage"
+              value={form.currentStage}
+              onChange={(event) => onFieldChange("currentStage", event.target.value)}
+            >
+              <option value="before_lawsuit">before_lawsuit</option>
+              <option value="police">police</option>
+              <option value="prosecution">prosecution</option>
+              <option value="court">court</option>
+              <option value="appeal">appeal</option>
+            </select>
+
+            <div className="checks">
+              <CheckBox
+                label="Evidence exists"
+                checked={form.hasEvidence}
+                onChange={(checked) => onFieldChange("hasEvidence", checked)}
+              />
+              <CheckBox
+                label="Deadline exists"
+                checked={form.hasDeadline}
+                onChange={(checked) => onFieldChange("hasDeadline", checked)}
+              />
+              <CheckBox
+                label="Opponent known"
+                checked={form.opponentKnown}
+                onChange={(checked) => onFieldChange("opponentKnown", checked)}
+              />
+              <CheckBox
+                label="Damage amount known"
+                checked={form.damageAmountKnown}
+                onChange={(checked) => onFieldChange("damageAmountKnown", checked)}
+              />
+              <CheckBox
+                label="Urgent"
+                checked={form.urgent}
+                onChange={(checked) => onFieldChange("urgent", checked)}
+              />
+            </div>
+
+            <button type="submit" disabled={loading}>
+              {loading ? "Analyzing..." : "Analyze Case Readiness"}
+            </button>
+          </form>
+        </section>
+      );
+    }
+
+    function CheckBox({ label, checked, onChange }) {
+      return (
+        <label className="check-label">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={(event) => onChange(event.target.checked)}
+          />
+          {label}
+        </label>
+      );
+    }
+
+    function ReadinessBanner({ status, result, error }) {
+      const banner = useMemo(() => {
+        if (status === "loading") {
+          return {
+            level: "medium",
+            title: "Analyzing intake...",
+            message: "The frontend is waiting for the legal intake readiness API."
+          };
+        }
+
+        if (status === "error" || error) {
+          return {
+            level: "low",
+            title: "API call failed",
+            message: "Check backend server."
+          };
+        }
+
+        if (!result) {
+          return {
+            level: "",
+            title: "Waiting for intake",
+            message: "Submit a draft legal intake to see readiness."
+          };
+        }
+
+        return {
+          level: String(result.readinessLevel || "LOW").toLowerCase(),
+          title: `Readiness: ${result.readinessLevel}`,
+          message: `${result.decision} -> ${result.recommendedNextStep}`
+        };
+      }, [status, result, error]);
+
+      return (
+        <div className={`banner ${banner.level}`}>
+          <strong>{banner.title}</strong>
+          <p>{banner.message}</p>
+        </div>
+      );
+    }
+
+    function ReadinessResult({ result }) {
+      const rows = [
+        ["Decision", result?.decision || "-"],
+        ["Readiness Level", result?.readinessLevel || "-"],
+        ["Readiness Score", result?.readinessScore ?? "-"],
+        ["Recommended Next Step", result?.recommendedNextStep || "-"]
+      ];
+
+      return (
+        <div className="summary-grid">
+          {rows.map(([label, value]) => (
+            <div className="summary-item" key={label}>
+              <span>{label}</span>
+              <strong>{value}</strong>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function toRequestBody(form) {
+      return {
+        caseType: form.caseType,
+        summary: form.summary,
+        claimPurpose: form.claimPurpose,
+        hasEvidence: form.hasEvidence,
+        hasDeadline: form.hasDeadline,
+        opponentKnown: form.opponentKnown,
+        damageAmountKnown: form.damageAmountKnown,
+        currentStage: form.currentStage,
+        urgent: form.urgent
+      };
+    }
+
+    ReactDOM.createRoot(document.querySelector("#root")).render(<App />);
+  </script>
+</body>
+</html>

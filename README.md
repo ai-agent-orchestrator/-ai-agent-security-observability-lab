@@ -26,6 +26,12 @@ React virtual thread job polling UI:
 docs/frontend/react-virtual-thread-job-polling.html
 ```
 
+React legal intake readiness draft:
+
+```text
+docs/frontend/react-legal-intake-readiness-draft.html
+```
+
 The prototype calls:
 
 ```text
@@ -54,6 +60,26 @@ POST /api/agent/jobs
 -> display PENDING / RUNNING / COMPLETED / FAILED
 -> show final risk decision
 ```
+
+Draft legal-domain extension:
+
+```text
+Same backend decision architecture:
+AI agent risk decision
+-> legal case readiness decision
+```
+
+```text
+Legal intake signal
+-> case signal
+-> readiness score
+-> case readiness decision
+-> recommended next step
+-> intake history
+```
+
+This is an intake-readiness prototype, not legal advice.
+The legal ontology is intentionally shallow for now and will be expanded later.
 
 The main idea:
 
@@ -841,4 +867,77 @@ The PM-level question:
 
 ```text
 What behavior, cost, and risk should be visible before an AI agent is trusted with autonomy?
+```
+
+## Draft Legal Intake Extension
+
+The same decision-engine architecture is also used as a draft legal intake prototype.
+
+API:
+
+```http
+POST /api/legal/intake/analyze
+GET /api/legal/intake/history
+GET /api/legal/intake/summary
+```
+
+Draft request:
+
+```json
+{
+  "caseType": "civil",
+  "summary": "Contract deposit return dispute with transfer records and chat evidence.",
+  "claimPurpose": "deposit return",
+  "hasEvidence": true,
+  "hasDeadline": true,
+  "opponentKnown": true,
+  "damageAmountKnown": false,
+  "currentStage": "before_lawsuit",
+  "urgent": false
+}
+```
+
+Draft response:
+
+```json
+{
+  "decision": "READY_WITH_MISSING_AMOUNT",
+  "readinessScore": 80,
+  "readinessLevel": "HIGH",
+  "signals": [
+    "CASE_TYPE_PROVIDED",
+    "CLAIM_PROVIDED",
+    "EVIDENCE_EXISTS",
+    "DEADLINE_EXISTS",
+    "OPPONENT_KNOWN",
+    "STAGE_PROVIDED"
+  ],
+  "recommendedNextStep": "ORGANIZE_CLAIM_AMOUNT_AND_EVIDENCE_TIMELINE",
+  "ontologyDraft": true,
+  "historyId": 1,
+  "traceId": "generated-trace-id"
+}
+```
+
+The first draft ontology uses simple intake signals:
+
+```text
+case type
+claim purpose
+evidence exists
+deadline or limitation issue
+opponent known
+damage amount known
+current stage
+urgency
+```
+
+The portfolio point:
+
+```text
+AI agent risk decision:
+behavior signal -> risk score -> risk decision -> action -> history
+
+Legal intake readiness decision:
+intake signal -> readiness score -> case readiness decision -> next step -> history
 ```

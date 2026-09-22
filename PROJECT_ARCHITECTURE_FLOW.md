@@ -516,3 +516,44 @@ Incident purpose:
 Alerting should not stop at a graph.
 A high-risk signal should become an operational incident that can be reviewed, acknowledged, and resolved.
 ```
+
+## 16. Draft Legal Intake Extension
+
+```mermaid
+flowchart TD
+    A[Legal Intake JSON] --> B[LegalIntakeAnalyzeRequest DTO]
+    B --> C[LegalIntakeDecisionService]
+    C --> D[Collect Intake Signals]
+    D --> E[Calculate Readiness Score]
+    E --> F[Decide Readiness Level]
+    F --> G[Case Readiness Decision]
+    G --> H[Recommended Next Step]
+    G --> I[Save LegalIntakeHistory]
+    I --> J[GET /api/legal/intake/history]
+    I --> K[GET /api/legal/intake/summary]
+    G --> L[React Legal Intake Draft Panel]
+```
+
+Same architecture:
+
+```text
+AI agent behavior signal
+-> risk score
+-> risk decision
+-> recommended action
+-> history
+
+Legal intake signal
+-> readiness score
+-> case readiness decision
+-> recommended next step
+-> intake history
+```
+
+Important boundary:
+
+```text
+This is not legal advice.
+It is a draft intake-readiness prototype for organizing facts before consultation.
+The legal ontology is intentionally shallow and will be expanded later.
+```
