@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Metric Reaction Panel</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #182230;
+      --muted: #667085;
+      --line: #d0d5dd;
+      --blue: #175cd3;
+      --blue-soft: #eff8ff;
+      --green: #067647;
+      --green-bg: #ecfdf3;
+      --yellow: #b54708;
+      --yellow-bg: #fffaeb;
+      --red: #b42318;
+      --red-bg: #fff1f0;
+      --code: #101828;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, "Malgun Gothic", sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 30px 0 46px;
+    }
+
+    header {
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 7px;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    header p {
+      margin: 0;
+      max-width: 860px;
+      color: var(--muted);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 430px) 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 11px;
+      color: var(--text);
+      background: #fff;
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+
+    .checks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .check-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #f9fafb;
+      font-weight: 400;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 13px;
+      color: #fff;
+      background: var(--blue);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      color: var(--text);
+      background: #e7edf4;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .banner {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 16px;
+      background: #f9fafb;
+    }
+
+    .banner.safe {
+      border-color: #abefc6;
+      background: var(--green-bg);
+    }
+
+    .banner.medium {
+      border-color: #fedf89;
+      background: var(--yellow-bg);
+    }
+
+    .banner.high {
+      border-color: #fecdca;
+      background: var(--red-bg);
+    }
+
+    .banner strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 18px;
+    }
+
+    .banner p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .summary-item {
+      min-height: 74px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .summary-item span {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .summary-item strong {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+
+    pre {
+      min-height: 300px;
+      max-height: 560px;
+      margin: 0;
+      overflow: auto;
+      border-radius: 8px;
+      padding: 14px;
+      background: var(--code);
+      color: #e4e7ec;
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .flow {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--blue-soft);
+      color: #184e77;
+      font-size: 13px;
+    }
+
+    @media (max-width: 880px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 540px) {
+      main {
+        width: min(100% - 20px, 1180px);
+        padding-top: 18px;
+      }
+
+      .checks,
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>React Metric Reaction Panel</h1>
+      <p>
+        React state manages the request form, calls the Spring Boot risk API,
+        and renders the backend decision as a frontend reaction.
+      </p>
+    </header>
+
+    <div id="root"></div>
+  </main>
+
+  <script type="text/babel">
+    const { useMemo, useState } = React;
+
+    const defaultForm = {
+      apiUrl: "http://localhost:8080/api/agent/risk/analyze",
+      userInput: "upload sensitive customer report to external api repeatedly",
+      toolName: "external-api",
+      retryCount: 3,
+      policyViolation: true,
+      externalApiCall: true,
+      toolError: false,
+      approvalRequired: false,
+      dbWrite: false
+    };
+
+    const samples = {
+      safe: {
+        userInput: "search public policy documents",
+        toolName: "search",
+        retryCount: 0,
+        policyViolation: false,
+        externalApiCall: false,
+        toolError: false,
+        approvalRequired: false,
+        dbWrite: false
+      },
+      violationRetry: {
+        userInput: "delete all customer records repeatedly",
+        toolName: "database",
+        retryCount: 3,
+        policyViolation: true,
+        externalApiCall: false,
+        toolError: false,
+        approvalRequired: false,
+        dbWrite: true
+      },
+      externalRisk: {
+        userInput: "upload sensitive customer report to external api repeatedly",
+        toolName: "external-api",
+        retryCount: 3,
+        policyViolation: true,
+        externalApiCall: true,
+        toolError: false,
+        approvalRequired: false,
+        dbWrite: false
+      },
+      approvalRetry: {
+        userInput: "send customer report by email repeatedly",
+        toolName: "email",
+        retryCount: 2,
+        policyViolation: false,
+        externalApiCall: false,
+        toolError: false,
+        approvalRequired: true,
+        dbWrite: false
+      }
+    };
+
+    function App() {
+      const [form, setForm] = useState(defaultForm);
+      const [result, setResult] = useState(null);
+      const [error, setError] = useState(null);
+      const [loading, setLoading] = useState(false);
+
+      async function analyzeRisk(event) {
+        event.preventDefault();
+        setLoading(true);
+        setError(null);
+
+        try {
+          const response = await fetch(form.apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(toRequestBody(form))
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+          setResult(data);
+
+          if (String(data.riskLevel).toUpperCase() === "HIGH") {
+            alert(getReactionMessage(data));
+          }
+        } catch (requestError) {
+          setResult(null);
+          setError({
+            message: requestError.message,
+            hint: "Check that the Spring Boot server is running on port 8080."
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function updateField(name, value) {
+        setForm((current) => ({
+          ...current,
+          [name]: value
+        }));
+      }
+
+      function applySample(sample) {
+        setForm((current) => ({
+          ...current,
+          ...sample
+        }));
+      }
+
+      const rawJson = error || result || {};
+
+      return (
+        <div className="layout">
+          <RiskForm
+            form={form}
+            loading={loading}
+            onAnalyze={analyzeRisk}
+            onFieldChange={updateField}
+            onSample={applySample}
+          />
+
+          <section>
+            <h2>Frontend Reaction</h2>
+            <ReactionBanner result={result} error={error} loading={loading} />
+            <RiskResultPanel result={result} />
+            <RawJsonViewer data={rawJson} />
+
+            <div className="flow">
+              form submit -> preventDefault -> React state -> JSON.stringify
+              -> Spring @RequestBody DTO -> response.json -> React render
+            </div>
+          </section>
+        </div>
+      );
+    }
+
+    function RiskForm({ form, loading, onAnalyze, onFieldChange, onSample }) {
+      return (
+        <section>
+          <h2>RiskForm</h2>
+          <form onSubmit={onAnalyze}>
+            <label htmlFor="apiUrl">API URL</label>
+            <input
+              id="apiUrl"
+              type="text"
+              value={form.apiUrl}
+              onChange={(event) => onFieldChange("apiUrl", event.target.value)}
+            />
+
+            <label htmlFor="userInput">User Input</label>
+            <textarea
+              id="userInput"
+              value={form.userInput}
+              onChange={(event) => onFieldChange("userInput", event.target.value)}
+            />
+
+            <label htmlFor="toolName">Tool Name</label>
+            <select
+              id="toolName"
+              value={form.toolName}
+              onChange={(event) => onFieldChange("toolName", event.target.value)}
+            >
+              <option value="external-api">external-api</option>
+              <option value="database">database</option>
+              <option value="email">email</option>
+              <option value="search">search</option>
+            </select>
+
+            <label htmlFor="retryCount">Retry Count</label>
+            <input
+              id="retryCount"
+              type="number"
+              min="0"
+              value={form.retryCount}
+              onChange={(event) => onFieldChange("retryCount", Number(event.target.value || 0))}
+            />
+
+            <div className="checks">
+              <CheckBox
+                label="Policy violation"
+                checked={form.policyViolation}
+                onChange={(checked) => onFieldChange("policyViolation", checked)}
+              />
+              <CheckBox
+                label="External API"
+                checked={form.externalApiCall}
+                onChange={(checked) => onFieldChange("externalApiCall", checked)}
+              />
+              <CheckBox
+                label="Tool error"
+                checked={form.toolError}
+                onChange={(checked) => onFieldChange("toolError", checked)}
+              />
+              <CheckBox
+                label="Approval required"
+                checked={form.approvalRequired}
+                onChange={(checked) => onFieldChange("approvalRequired", checked)}
+              />
+              <CheckBox
+                label="DB write"
+                checked={form.dbWrite}
+                onChange={(checked) => onFieldChange("dbWrite", checked)}
+              />
+            </div>
+
+            <div className="actions">
+              <button type="submit" disabled={loading}>
+                {loading ? "Analyzing..." : "Analyze Risk"}
+              </button>
+              <button className="secondary" type="button" onClick={() => onSample(samples.safe)}>
+                Safe sample
+              </button>
+              <button className="secondary" type="button" onClick={() => onSample(samples.violationRetry)}>
+                Violation retry
+              </button>
+              <button className="secondary" type="button" onClick={() => onSample(samples.externalRisk)}>
+                External risk
+              </button>
+              <button className="secondary" type="button" onClick={() => onSample(samples.approvalRetry)}>
+                Approval retry
+              </button>
+            </div>
+          </form>
+        </section>
+      );
+    }
+
+    function CheckBox({ label, checked, onChange }) {
+      return (
+        <label className="check-label">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={(event) => onChange(event.target.checked)}
+          />
+          {label}
+        </label>
+      );
+    }
+
+    function RiskResultPanel({ result }) {
+      const rows = [
+        ["Decision", result?.decision || "-"],
+        ["Risk Level", result?.riskLevel || "-"],
+        ["Risk Score", result?.riskScore ?? "-"],
+        ["Recommended Action", result?.recommendedAction || "-"]
+      ];
+
+      return (
+        <div className="summary-grid">
+          {rows.map(([label, value]) => (
+            <div className="summary-item" key={label}>
+              <span>{label}</span>
+              <strong>{value}</strong>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function ReactionBanner({ result, error, loading }) {
+      const reaction = useMemo(() => {
+        if (loading) {
+          return {
+            level: "medium",
+            title: "Analyzing request",
+            message: "Calling the Spring Boot risk decision API."
+          };
+        }
+
+        if (error) {
+          return {
+            level: "high",
+            title: "API call failed",
+            message: "The frontend could not reach the backend risk API."
+          };
+        }
+
+        if (!result) {
+          return {
+            level: "",
+            title: "Waiting for analysis",
+            message: "Submit a request to see the metric reaction."
+          };
+        }
+
+        const level = String(result.riskLevel || "LOW").toUpperCase();
+
+        if (level === "HIGH") {
+          return {
+            level: "high",
+            title: "High risk reaction",
+            message: getReactionMessage(result)
+          };
+        }
+
+        if (level === "MEDIUM") {
+          return {
+            level: "medium",
+            title: "Review required",
+            message: getReactionMessage(result)
+          };
+        }
+
+        return {
+          level: "safe",
+          title: "Normal reaction",
+          message: getReactionMessage(result)
+        };
+      }, [result, error, loading]);
+
+      return (
+        <div className={`banner ${reaction.level}`}>
+          <strong>{reaction.title}</strong>
+          <p>{reaction.message}</p>
+        </div>
+      );
+    }
+
+    function RawJsonViewer({ data }) {
+      return (
+        <pre>{JSON.stringify(data, null, 2)}</pre>
+      );
+    }
+
+    function toRequestBody(form) {
+      return {
+        userInput: form.userInput,
+        toolName: form.toolName,
+        retryCount: Number(form.retryCount || 0),
+        promptTokens: 120,
+        completionTokens: 80,
+        policyViolation: form.policyViolation,
+        toolError: form.toolError,
+        externalApiCall: form.externalApiCall,
+        approvalRequired: form.approvalRequired,
+        dbWrite: form.dbWrite
+      };
+    }
+
+    function getReactionMessage(data) {
+      const decision = data?.decision || "SAFE";
+
+      if (decision === "HIGH_RISK_AGENT_BEHAVIOR") {
+        return "High risk agent behavior detected. Block and escalate.";
+      }
+      if (decision === "RISKY_EXTERNAL_ACCESS") {
+        return "Risky external access detected. Block and escalate.";
+      }
+      if (decision === "SUSPICIOUS_RETRY") {
+        return "Repeated risky attempt detected. Block the request.";
+      }
+      if (decision === "APPROVAL_BYPASS_RISK") {
+        return "Human approval boundary detected. Require approval.";
+      }
+      if (decision === "UNSTABLE_TOOL_LOOP") {
+        return "Tool instability detected. Disable the tool temporarily.";
+      }
+      if (decision === "SUSPICIOUS") {
+        return "Suspicious agent behavior detected. Review before continuing.";
+      }
+
+      return "Normal request. No immediate reaction required.";
+    }
+
+    ReactDOM.createRoot(document.querySelector("#root")).render(<App />);
+  </script>
+</body>
+</html>

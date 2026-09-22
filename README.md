@@ -14,6 +14,12 @@ Frontend metric reaction prototype:
 docs/frontend/metric-reaction-prototype.html
 ```
 
+React metric reaction panel:
+
+```text
+docs/frontend/react-metric-reaction-panel.html
+```
+
 The prototype calls:
 
 ```text
@@ -21,6 +27,16 @@ POST http://localhost:8080/api/agent/risk/analyze
 ```
 
 and displays the backend risk decision as a simple frontend reaction message.
+
+Frontend learning path:
+
+```text
+HTML + JavaScript fetch prototype
+-> React state based RiskForm
+-> RiskResultPanel
+-> ReactionBanner
+-> RawJsonViewer
+```
 
 The main idea:
 
