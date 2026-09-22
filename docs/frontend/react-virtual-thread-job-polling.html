@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Virtual Thread Job Polling UI</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #182230;
+      --muted: #667085;
+      --line: #d0d5dd;
+      --blue: #175cd3;
+      --blue-bg: #eff8ff;
+      --green: #067647;
+      --green-bg: #ecfdf3;
+      --yellow: #b54708;
+      --yellow-bg: #fffaeb;
+      --red: #b42318;
+      --red-bg: #fff1f0;
+      --code: #101828;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, "Malgun Gothic", sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 30px 0 46px;
+    }
+
+    header {
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 7px;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    header p {
+      margin: 0;
+      max-width: 900px;
+      color: var(--muted);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 430px) 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 11px;
+      color: var(--text);
+      background: #fff;
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+
+    .checks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .check-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #f9fafb;
+      font-weight: 400;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 13px;
+      color: #fff;
+      background: var(--blue);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      color: var(--text);
+      background: #e7edf4;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .status-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 16px;
+      background: #fff;
+    }
+
+    .status-card.pending,
+    .status-card.running {
+      border-color: #b2ddff;
+      background: var(--blue-bg);
+    }
+
+    .status-card.completed {
+      border-color: #abefc6;
+      background: var(--green-bg);
+    }
+
+    .status-card.failed,
+    .status-card.error {
+      border-color: #fecdca;
+      background: var(--red-bg);
+    }
+
+    .status-card strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 18px;
+    }
+
+    .status-card p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .progress {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      margin-top: 12px;
+      background: #e4e7ec;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--blue);
+      transition: width 180ms ease;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .summary-item {
+      min-height: 74px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .summary-item span {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .summary-item strong {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+
+    pre {
+      min-height: 300px;
+      max-height: 560px;
+      margin: 0;
+      overflow: auto;
+      border-radius: 8px;
+      padding: 14px;
+      background: var(--code);
+      color: #e4e7ec;
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .flow {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--yellow-bg);
+      color: #7a2e0e;
+      font-size: 13px;
+    }
+
+    @media (max-width: 880px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 540px) {
+      main {
+        width: min(100% - 20px, 1180px);
+        padding-top: 18px;
+      }
+
+      .checks,
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>React Virtual Thread Job Polling UI</h1>
+      <p>
+        The frontend starts an async agent job, receives a jobId immediately,
+        and polls the Spring Boot job API until the Java 21 virtual thread finishes.
+      </p>
+    </header>
+
+    <div id="root"></div>
+  </main>
+
+  <script type="text/babel">
+    const { useEffect, useMemo, useRef, useState } = React;
+
+    const defaultForm = {
+      apiBaseUrl: "http://localhost:8080",
+      userInput: "upload sensitive customer report to external api repeatedly",
+      toolName: "external-api",
+      retryCount: 3,
+      policyViolation: true,
+      externalApiCall: true,
+      toolError: false,
+      approvalRequired: false,
+      dbWrite: false
+    };
+
+    function App() {
+      const [form, setForm] = useState(defaultForm);
+      const [job, setJob] = useState(null);
+      const [error, setError] = useState(null);
+      const [clientStatus, setClientStatus] = useState("idle");
+      const pollTimerRef = useRef(null);
+
+      useEffect(() => {
+        return () => stopPolling();
+      }, []);
+
+      async function startJob(event) {
+        event.preventDefault();
+        stopPolling();
+        setError(null);
+        setJob(null);
+        setClientStatus("submitting");
+
+        try {
+          const response = await fetch(`${form.apiBaseUrl}/api/agent/jobs`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(toRequestBody(form))
+          });
+
+          if (!response.ok) {
+            throw new Error(`POST /api/agent/jobs failed with HTTP ${response.status}`);
+          }
+
+          const acceptedJob = await response.json();
+          setJob(acceptedJob);
+          setClientStatus("polling");
+          pollJob(acceptedJob.jobId);
+          pollTimerRef.current = setInterval(() => pollJob(acceptedJob.jobId), 1000);
+        } catch (requestError) {
+          setError({
+            message: requestError.message,
+            hint: "Check that the Spring Boot server is running on port 8080."
+          });
+          setClientStatus("error");
+        }
+      }
+
+      async function pollJob(jobId) {
+        try {
+          const response = await fetch(`${form.apiBaseUrl}/api/agent/jobs/${jobId}`);
+
+          if (!response.ok) {
+            throw new Error(`GET /api/agent/jobs/${jobId} failed with HTTP ${response.status}`);
+          }
+
+          const currentJob = await response.json();
+          setJob(currentJob);
+
+          if (currentJob.status === "COMPLETED") {
+            stopPolling();
+            setClientStatus("completed");
+          }
+
+          if (currentJob.status === "FAILED") {
+            stopPolling();
+            setClientStatus("failed");
+          }
+        } catch (pollError) {
+          stopPolling();
+          setError({
+            message: pollError.message,
+            hint: "Polling stopped because the job status request failed."
+          });
+          setClientStatus("error");
+        }
+      }
+
+      function stopPolling() {
+        if (pollTimerRef.current) {
+          clearInterval(pollTimerRef.current);
+          pollTimerRef.current = null;
+        }
+      }
+
+      function updateField(name, value) {
+        setForm((current) => ({
+          ...current,
+          [name]: value
+        }));
+      }
+
+      const rawJson = error || job || {};
+
+      return (
+        <div className="layout">
+          <JobForm
+            form={form}
+            submitting={clientStatus === "submitting"}
+            polling={clientStatus === "polling"}
+            onSubmit={startJob}
+            onFieldChange={updateField}
+          />
+
+          <section>
+            <h2>Job Polling Result</h2>
+            <JobStatusCard clientStatus={clientStatus} job={job} error={error} />
+            <JobResultPanel job={job} />
+            <RawJsonViewer data={rawJson} />
+
+            <div className="flow">
+              POST /api/agent/jobs -> jobId -> setInterval polling every 1s
+              -> GET /api/agent/jobs/{jobId} -> PENDING / RUNNING / COMPLETED
+            </div>
+          </section>
+        </div>
+      );
+    }
+
+    function JobForm({ form, submitting, polling, onSubmit, onFieldChange }) {
+      const busy = submitting || polling;
+
+      return (
+        <section>
+          <h2>Async Agent Job</h2>
+          <form onSubmit={onSubmit}>
+            <label htmlFor="apiBaseUrl">API Base URL</label>
+            <input
+              id="apiBaseUrl"
+              type="text"
+              value={form.apiBaseUrl}
+              onChange={(event) => onFieldChange("apiBaseUrl", event.target.value)}
+            />
+
+            <label htmlFor="userInput">User Input</label>
+            <textarea
+              id="userInput"
+              value={form.userInput}
+              onChange={(event) => onFieldChange("userInput", event.target.value)}
+            />
+
+            <label htmlFor="toolName">Tool Name</label>
+            <select
+              id="toolName"
+              value={form.toolName}
+              onChange={(event) => onFieldChange("toolName", event.target.value)}
+            >
+              <option value="external-api">external-api</option>
+              <option value="database">database</option>
+              <option value="email">email</option>
+              <option value="search">search</option>
+            </select>
+
+            <label htmlFor="retryCount">Retry Count</label>
+            <input
+              id="retryCount"
+              type="number"
+              min="0"
+              value={form.retryCount}
+              onChange={(event) => onFieldChange("retryCount", Number(event.target.value || 0))}
+            />
+
+            <div className="checks">
+              <CheckBox
+                label="Policy violation"
+                checked={form.policyViolation}
+                onChange={(checked) => onFieldChange("policyViolation", checked)}
+              />
+              <CheckBox
+                label="External API"
+                checked={form.externalApiCall}
+                onChange={(checked) => onFieldChange("externalApiCall", checked)}
+              />
+              <CheckBox
+                label="Tool error"
+                checked={form.toolError}
+                onChange={(checked) => onFieldChange("toolError", checked)}
+              />
+              <CheckBox
+                label="Approval required"
+                checked={form.approvalRequired}
+                onChange={(checked) => onFieldChange("approvalRequired", checked)}
+              />
+              <CheckBox
+                label="DB write"
+                checked={form.dbWrite}
+                onChange={(checked) => onFieldChange("dbWrite", checked)}
+              />
+            </div>
+
+            <div className="actions">
+              <button type="submit" disabled={busy}>
+                {submitting ? "Submitting..." : polling ? "Polling..." : "Start Async Job"}
+              </button>
+            </div>
+          </form>
+        </section>
+      );
+    }
+
+    function CheckBox({ label, checked, onChange }) {
+      return (
+        <label className="check-label">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={(event) => onChange(event.target.checked)}
+          />
+          {label}
+        </label>
+      );
+    }
+
+    function JobStatusCard({ clientStatus, job, error }) {
+      const status = job?.status || clientStatus;
+      const progress = Number(job?.progress || 0);
+      const card = getStatusCard(clientStatus, job, error);
+
+      return (
+        <div className={`status-card ${String(status).toLowerCase()}`}>
+          <strong>{card.title}</strong>
+          <p>{card.message}</p>
+          <div className="progress" aria-label="Job progress">
+            <span style={{ width: `${Math.min(progress, 100)}%` }}></span>
+          </div>
+        </div>
+      );
+    }
+
+    function JobResultPanel({ job }) {
+      const rows = [
+        ["Job ID", job?.jobId || "-"],
+        ["Status", job?.status || "-"],
+        ["Progress", job?.progress == null ? "-" : `${job.progress}%`],
+        ["Trace ID", job?.traceId || "-"],
+        ["Decision", job?.decision || "-"],
+        ["Risk Level", job?.riskLevel || "-"],
+        ["Risk Score", job?.riskScore ?? "-"],
+        ["Recommended Action", job?.recommendedAction || "-"]
+      ];
+
+      return (
+        <div className="summary-grid">
+          {rows.map(([label, value]) => (
+            <div className="summary-item" key={label}>
+              <span>{label}</span>
+              <strong>{value}</strong>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function RawJsonViewer({ data }) {
+      return (
+        <pre>{JSON.stringify(data, null, 2)}</pre>
+      );
+    }
+
+    function toRequestBody(form) {
+      return {
+        userInput: form.userInput,
+        toolName: form.toolName,
+        retryCount: Number(form.retryCount || 0),
+        promptTokens: 120,
+        completionTokens: 80,
+        policyViolation: form.policyViolation,
+        toolError: form.toolError,
+        externalApiCall: form.externalApiCall,
+        approvalRequired: form.approvalRequired,
+        dbWrite: form.dbWrite
+      };
+    }
+
+    function getStatusCard(clientStatus, job, error) {
+      if (clientStatus === "idle") {
+        return {
+          title: "Waiting for job",
+          message: "Start an async job to see virtual thread polling."
+        };
+      }
+
+      if (clientStatus === "submitting") {
+        return {
+          title: "Submitting job...",
+          message: "The frontend is sending POST /api/agent/jobs."
+        };
+      }
+
+      if (clientStatus === "error") {
+        return {
+          title: "API call failed",
+          message: error?.hint || "Check backend server."
+        };
+      }
+
+      if (job?.status === "PENDING") {
+        return {
+          title: "Job accepted",
+          message: `Status: PENDING. Job ${job.jobId} is waiting for virtual thread execution.`
+        };
+      }
+
+      if (job?.status === "RUNNING") {
+        return {
+          title: "Job is running",
+          message: `Status: RUNNING. Polling continues every 1 second.`
+        };
+      }
+
+      if (job?.status === "COMPLETED") {
+        return {
+          title: "Job completed",
+          message: `Decision: ${job.decision || "-"}`
+        };
+      }
+
+      if (job?.status === "FAILED") {
+        return {
+          title: "Job failed",
+          message: job.errorMessage || "The backend marked this job as FAILED."
+        };
+      }
+
+      return {
+        title: "Polling job status",
+        message: "Waiting for the next status response."
+      };
+    }
+
+    ReactDOM.createRoot(document.querySelector("#root")).render(<App />);
+  </script>
+</body>
+</html>

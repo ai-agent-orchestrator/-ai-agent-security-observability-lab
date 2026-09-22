@@ -468,6 +468,33 @@ JavaScript or React handles async API calls.
 CSS only styles loading states, result cards, and status badges.
 ```
 
+React polling UI:
+
+```text
+docs/frontend/react-virtual-thread-job-polling.html
+```
+
+Detailed explanation:
+
+```text
+docs/frontend/VIRTUAL_THREAD_JOB_POLLING_FLOW.md
+```
+
+Polling version:
+
+```mermaid
+flowchart TD
+    A[Start Async Job button] --> B[POST /api/agent/jobs]
+    B --> C[Receive jobId]
+    C --> D[Start setInterval]
+    D --> E[GET /api/agent/jobs/jobId]
+    E --> F{Status}
+    F -->|PENDING| D
+    F -->|RUNNING| D
+    F -->|COMPLETED| G[Stop polling and show decision]
+    F -->|FAILED| H[Stop polling and show error]
+```
+
 ## 15. Incident Response Prototype
 
 ```mermaid

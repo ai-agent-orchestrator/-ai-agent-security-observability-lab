@@ -20,6 +20,12 @@ React metric reaction panel:
 docs/frontend/react-metric-reaction-panel.html
 ```
 
+React virtual thread job polling UI:
+
+```text
+docs/frontend/react-virtual-thread-job-polling.html
+```
+
 The prototype calls:
 
 ```text
@@ -37,6 +43,16 @@ HTML + JavaScript fetch prototype
 -> RiskResultPanel
 -> ReactionBanner
 -> RawJsonViewer
+```
+
+Async frontend learning path:
+
+```text
+POST /api/agent/jobs
+-> receive jobId immediately
+-> poll GET /api/agent/jobs/{jobId} every 1 second
+-> display PENDING / RUNNING / COMPLETED / FAILED
+-> show final risk decision
 ```
 
 The main idea:
@@ -648,6 +664,23 @@ Why virtual threads fit this project:
 ```text
 AI agent servers often wait for LLM APIs, external APIs, tool calls, and DB operations.
 Java 21 virtual threads make this waiting-heavy backend flow easier to model without making WebSocket the center of the project.
+```
+
+Frontend polling UI:
+
+```text
+docs/frontend/react-virtual-thread-job-polling.html
+```
+
+This UI demonstrates the class requirement of asynchronous API integration:
+
+```text
+button click
+-> POST async job request
+-> backend returns jobId before analysis is finished
+-> React starts polling every 1 second
+-> UI changes from PENDING to RUNNING to COMPLETED
+-> decision is displayed when the virtual thread finishes
 ```
 
 ## Architecture Explanation for Portfolio
