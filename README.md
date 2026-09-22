@@ -33,6 +33,7 @@ Frontend learning path:
 ```text
 HTML + JavaScript fetch prototype
 -> React state based RiskForm
+-> idle / loading / success / error request states
 -> RiskResultPanel
 -> ReactionBanner
 -> RawJsonViewer

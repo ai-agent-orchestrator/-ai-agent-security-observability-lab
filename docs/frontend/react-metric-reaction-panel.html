@@ -186,6 +186,53 @@
       color: var(--muted);
     }
 
+    .status-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .status-label {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status-pill {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .status-pill.idle {
+      color: #344054;
+      background: #f2f4f7;
+    }
+
+    .status-pill.loading {
+      color: #175cd3;
+      background: var(--blue-soft);
+    }
+
+    .status-pill.success {
+      color: var(--green);
+      background: var(--green-bg);
+    }
+
+    .status-pill.error {
+      color: var(--red);
+      background: var(--red-bg);
+    }
+
     .summary-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -335,12 +382,13 @@
       const [form, setForm] = useState(defaultForm);
       const [result, setResult] = useState(null);
       const [error, setError] = useState(null);
-      const [loading, setLoading] = useState(false);
+      const [requestStatus, setRequestStatus] = useState("idle");
 
       async function analyzeRisk(event) {
         event.preventDefault();
-        setLoading(true);
+        setRequestStatus("loading");
         setError(null);
+        setResult(null);
 
         try {
           const response = await fetch(form.apiUrl, {
@@ -357,6 +405,7 @@
 
           const data = await response.json();
           setResult(data);
+          setRequestStatus("success");
 
           if (String(data.riskLevel).toUpperCase() === "HIGH") {
             alert(getReactionMessage(data));
@@ -367,8 +416,7 @@
             message: requestError.message,
             hint: "Check that the Spring Boot server is running on port 8080."
           });
-        } finally {
-          setLoading(false);
+          setRequestStatus("error");
         }
       }
 
@@ -386,6 +434,7 @@
         }));
       }
 
+      const loading = requestStatus === "loading";
       const rawJson = error || result || {};
 
       return (
@@ -400,7 +449,8 @@
 
           <section>
             <h2>Frontend Reaction</h2>
-            <ReactionBanner result={result} error={error} loading={loading} />
+            <StatusLine status={requestStatus} />
+            <ReactionBanner result={result} error={error} status={requestStatus} />
             <RiskResultPanel result={result} />
             <RawJsonViewer data={rawJson} />
 
@@ -409,6 +459,22 @@
               -> Spring @RequestBody DTO -> response.json -> React render
             </div>
           </section>
+        </div>
+      );
+    }
+
+    function StatusLine({ status }) {
+      const messageByStatus = {
+        idle: "idle: 아직 요청 전입니다.",
+        loading: "loading: 백엔드가 risk decision을 분석 중입니다.",
+        success: "success: decision 응답을 받았습니다.",
+        error: "error: 서버 꺼짐, CORS, 400, 500 같은 실패 상태입니다."
+      };
+
+      return (
+        <div className="status-line">
+          <p className="status-label">{messageByStatus[status]}</p>
+          <span className={`status-pill ${status}`}>{status}</span>
         </div>
       );
     }
@@ -537,25 +603,25 @@
       );
     }
 
-    function ReactionBanner({ result, error, loading }) {
+    function ReactionBanner({ result, error, status }) {
       const reaction = useMemo(() => {
-        if (loading) {
+        if (status === "loading") {
           return {
             level: "medium",
-            title: "Analyzing request",
-            message: "Calling the Spring Boot risk decision API."
+            title: "Analyzing...",
+            message: "The frontend is waiting for the Spring Boot risk decision API."
           };
         }
 
-        if (error) {
+        if (status === "error" || error) {
           return {
             level: "high",
             title: "API call failed",
-            message: "The frontend could not reach the backend risk API."
+            message: "API call failed. Check backend server."
           };
         }
 
-        if (!result) {
+        if (status === "idle" || !result) {
           return {
             level: "",
             title: "Waiting for analysis",
@@ -568,7 +634,7 @@
         if (level === "HIGH") {
           return {
             level: "high",
-            title: "High risk reaction",
+            title: "High risk agent behavior detected.",
             message: getReactionMessage(result)
           };
         }
@@ -586,7 +652,7 @@
           title: "Normal reaction",
           message: getReactionMessage(result)
         };
-      }, [result, error, loading]);
+      }, [result, error, status]);
 
       return (
         <div className={`banner ${reaction.level}`}>
