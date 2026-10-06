@@ -94,6 +94,30 @@ public class AgentMetricRecorder {
                 .increment();
     }
 
+    public void recordJobStarted() {
+        Counter.builder("agent.jobs.started")
+                .description("Total number of async agent risk jobs started")
+                .register(meterRegistry)
+                .increment();
+    }
+
+    public void recordJobCompleted(String decision, String riskLevel) {
+        Counter.builder("agent.jobs.completed")
+                .description("Total number of async agent risk jobs completed")
+                .tag("decision", normalize(decision))
+                .tag("risk_level", normalize(riskLevel))
+                .register(meterRegistry)
+                .increment();
+    }
+
+    public void recordJobFailed(String errorType) {
+        Counter.builder("agent.jobs.failed")
+                .description("Total number of async agent risk jobs failed")
+                .tag("error", normalize(errorType))
+                .register(meterRegistry)
+                .increment();
+    }
+
     public void recordPolicyCheck(String decision, String policyName) {
         Counter.builder("agent.policy.check")
                 .description("Total number of guardrail-ready agent policy checks")

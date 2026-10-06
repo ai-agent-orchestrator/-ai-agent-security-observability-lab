@@ -1,41 +1,96 @@
 # AI Agent Security Observability Lab
 
-This repository records hands-on experiments for AI agent security observability.
+This repository is a security-focused lab for detecting suspicious AI agent behavior through custom metrics, Prometheus, Grafana, and future guardrail integration.
 
-The focus is direct evidence:
-
-```text
-Postman request
--> Spring Boot custom metric
--> Prometheus query
--> screenshot evidence
--> security interpretation
-```
-
-## Experiment Evidence
-
-- [Full screenshot gallery](docs/evidence/GALLERY.md)
-- [AI agent risk metric portfolio](PORTFOLIO.md)
-- [Spring Security observability portfolio](SECURITY_PORTFOLIO.md)
-- [Evidence notes](docs/evidence/README.md)
-
-Representative results:
-
-![three metric agent risk pattern](docs/evidence/risk-patterns/2026-09-17-three-metric-policy-violation-retry-tool-calls-prometheus.png)
+It now contains executable Spring Boot code, not only notes:
 
 ```text
-policy violation + retry + tool calls increased together.
-This means the agent repeatedly approached a blocked action while continuing tool activity.
+spring/guardrail-ready-policy-checker
 ```
 
-![external api policy violation](docs/evidence/risk-patterns/2026-09-17-external-api-policy-violation-prometheus.png)
+Frontend metric reaction prototype:
 
 ```text
-External API call and policy violation were observed in the same time window.
-This pattern indicates that a risky agent request moved toward an external dependency.
+docs/frontend/metric-reaction-prototype.html
 ```
 
-Observed metric combinations:
+React metric reaction panel:
+
+```text
+docs/frontend/react-metric-reaction-panel.html
+```
+
+React virtual thread job polling UI:
+
+```text
+docs/frontend/react-virtual-thread-job-polling.html
+```
+
+React legal intake readiness draft:
+
+```text
+docs/frontend/react-legal-intake-readiness-draft.html
+```
+
+The prototype calls:
+
+```text
+POST http://localhost:8080/api/agent/risk/analyze
+```
+
+and displays the backend risk decision as a simple frontend reaction message.
+
+Frontend learning path:
+
+```text
+HTML + JavaScript fetch prototype
+-> React state based RiskForm
+-> idle / loading / success / error request states
+-> RiskResultPanel
+-> ReactionBanner
+-> RawJsonViewer
+```
+
+Async frontend learning path:
+
+```text
+POST /api/agent/jobs
+-> receive jobId immediately
+-> poll GET /api/agent/jobs/{jobId} every 1 second
+-> display PENDING / RUNNING / COMPLETED / FAILED
+-> show final risk decision
+```
+
+Draft legal-domain extension:
+
+```text
+Same backend decision architecture:
+AI agent risk decision
+-> legal case readiness decision
+```
+
+```text
+Legal intake signal
+-> case signal
+-> readiness score
+-> case readiness decision
+-> recommended next step
+-> intake history
+```
+
+This is an intake-readiness prototype, not legal advice.
+The legal ontology is intentionally shallow for now and will be expanded later.
+
+The main idea:
+
+```text
+AI agent security is not only about the final answer.
+It is about what the agent repeatedly tried to do, which tools it called, where it failed, and whether it approached risky actions.
+```
+
+## Core Thesis
+
+Single metrics are useful, but security meaning often appears in combinations.
 
 ```text
 policy violation + retry
@@ -51,330 +106,838 @@ approval required + retry
 -> repeated attempts near a human approval boundary
 ```
 
-Conclusion:
+The project direction:
 
 ```text
-AI agent security is not only about the final answer.
-It is about what the agent repeatedly tried to do, which tools it called, where it failed, and whether it approached risky actions.
+Detect suspicious agent behavior early
+-> interpret metric combinations
+-> alert or escalate
+-> apply customized guardrails
+-> record the incident
+-> update policy and metrics
 ```
 
-Executable Spring Boot code:
+## Policy Model
+
+The working model for this lab:
+
+```text
+policy = ontology + security doctrine
+```
+
+Ontology answers:
+
+```text
+What object is being touched?
+What action is being attempted?
+Which tool or external dependency is involved?
+Is the data sensitive?
+Is the action reversible?
+```
+
+Security doctrine answers:
+
+```text
+Allow it?
+Deny it?
+Require human approval?
+Escalate it?
+Record it as an incident?
+Apply a guardrail?
+```
+
+Example:
+
+```text
+request: delete all customer records
+ontology: customer_records + bulk_delete + database_tool
+security doctrine: irreversible sensitive-data operation
+decision: DENIED
+metric: agent_policy_violation_total{policy="dangerous_database_operation"}
+```
+
+## Why This Matters
+
+API success is no longer enough.
+
+```text
+The API succeeded.
+But was it cheap, safe, stable, and policy-compliant?
+```
+
+For AI agents, cost and security are tightly connected:
+
+```text
+retry
+-> repeated cost
+
+tool call
+-> execution cost and operational risk
+
+external API call
+-> data exposure and dependency risk
+
+policy violation
+-> blocked or dangerous behavior
+
+approval required
+-> human control boundary
+```
+
+## Current Implementation Source
+
+The executable Spring Boot lab now lives directly in this repository:
 
 ```text
 spring/guardrail-ready-policy-checker
 ```
 
-## Portfolio Experiment Results
-
-The sections below summarize the actual experiments captured in this repository.
-
-Full pages:
-
-- [AI agent risk metric portfolio](PORTFOLIO.md)
-- [Spring Security observability portfolio](SECURITY_PORTFOLIO.md)
-- [Full screenshot gallery](docs/evidence/GALLERY.md)
-
-## 1. Policy Decision Metrics
-
-PromQL:
-
-```promql
-sum by (decision, policy) (
-  increase(agent_policy_check_total[5m])
-)
-```
-
-![policy decision metrics](docs/evidence/basic/2026-09-17-policy-check-decisions-prometheus-allowed-denied.png)
+It was promoted and adjusted from:
 
 ```text
-ALLOWED, DENIED, and APPROVAL_REQUIRED decisions are visible as separate metric series.
-This means agent requests can be observed by policy outcome, not only by HTTP status.
+C:\myLectureWs\spring-boot-api-observability-practice
 ```
 
-## 2. Allowed Request
-
-Scenario:
-
-```http
-POST /api/agent/policy-check
-```
-
-```json
-{
-  "userInput": "search public policy documents",
-  "toolName": "search"
-}
-```
-
-PromQL:
-
-```promql
-increase(agent_policy_allowed_total[5m])
-```
-
-![allowed request increase](docs/evidence/basic/2026-09-17-policy-check-allowed-increase-prometheus.png)
+Related GitHub repository:
 
 ```text
-Safe requests are counted separately.
-This provides a baseline for normal agent behavior.
+https://github.com/ai-agent-orchestrator/spring-boot-api-observability-practice
 ```
 
-## 3. Denied Request
-
-Scenario:
-
-```http
-POST /api/agent/policy-check
-```
-
-```json
-{
-  "userInput": "delete all customer records",
-  "toolName": "database"
-}
-```
-
-![denied request postman](docs/evidence/basic/2026-09-17-policy-check-denied-postman.png)
-
-PromQL:
-
-```promql
-increase(agent_policy_violation_total{policy="dangerous_database_operation"}[5m])
-```
-
-![denied request prometheus](docs/evidence/basic/2026-09-17-policy-violation-dangerous-database-prometheus.png)
+Relevant branches:
 
 ```text
-Dangerous database or bulk customer-data operations are denied and emitted as policy violation metrics.
-This turns policy enforcement into observable security evidence.
+feature/jpa-n-plus-one-practice
+-> SQL statement count metric for N+1 observability
+
+feature/agent-custom-metrics-practice
+-> agent behavior metrics
+
+feature/agent-risk-pattern-metrics-practice
+-> suspicious agent behavior metric combinations
+-> guardrail-ready policy checker
 ```
 
-## 4. Approval Required
+This repository is the security-centered home. The code keeps the N+1 observability practice as a cost-signal baseline, then extends it into AI agent behavior metrics, risk-pattern metric combinations, and a guardrail-ready policy checker.
 
-Scenario:
+Run it locally:
 
-```http
-POST /api/agent/policy-check
+```powershell
+cd spring/guardrail-ready-policy-checker
+.\gradlew.bat bootRun
 ```
 
-```json
-{
-  "userInput": "send customer report by email",
-  "toolName": "email"
-}
-```
-
-![approval required postman](docs/evidence/basic/2026-09-17-policy-check-approval-required-postman.png)
-
-PromQL:
-
-```promql
-increase(agent_approval_required_total{reason="sensitive_action"}[5m])
-```
-
-![approval required increase](docs/evidence/basic/2026-09-17-approval-required-increase-prometheus.png)
+Health check:
 
 ```text
-APPROVAL_REQUIRED is not a simple failure.
-It is a human approval boundary that can be measured independently.
+http://localhost:8080/actuator/health
 ```
 
-## 5. Policy Violation + Retry
-
-Scenario:
-
-```http
-POST /api/agent/risk-patterns/policy-violation-retry
-```
-
-```json
-{
-  "userInput": "delete all customer records repeatedly",
-  "toolName": "database"
-}
-```
-
-![policy violation retry postman](docs/evidence/risk-patterns/2026-09-17-policy-violation-retry-postman.png)
-
-PromQL:
-
-```promql
-increase(agent_policy_violation_total[5m])
-or
-increase(agent_retry_count_total[5m])
-```
-
-![policy violation retry prometheus](docs/evidence/risk-patterns/2026-09-17-policy-violation-retry-prometheus.png)
+Prometheus metrics:
 
 ```text
-Policy violation and retry increased together.
-This indicates repeated attempts around a blocked or risky action.
+http://localhost:8080/actuator/prometheus
 ```
 
-## 6. Tool Error + Retry
+Lab guide endpoint:
 
-Scenario:
-
-```http
-POST /api/agent/risk-patterns/tool-error-retry
+```text
+http://localhost:8080/api/security-observability/guide
 ```
 
-```json
-{
-  "userInput": "search recent policy documents with failing tool",
-  "toolName": "search"
-}
+Evidence gallery:
+
+```text
+docs/evidence
 ```
 
-![tool error retry postman](docs/evidence/risk-patterns/2026-09-17-tool-error-retry-postman.png)
+The evidence folder is where Postman, Prometheus, and Grafana screenshots are collected with interpretation notes. The goal is to show metric combinations, not only isolated metric values.
 
-PromQL:
+Portfolio evidence:
+
+```text
+PORTFOLIO.md
+```
+
+The portfolio document connects API scenarios, PromQL queries, screenshots, and PM/security interpretation.
+
+Spring Security lab:
+
+```text
+SECURITY_LAB.md
+```
+
+The security lab protects Actuator endpoints and records authentication or authorization failures as custom metrics.
+
+Security portfolio evidence:
+
+```text
+SECURITY_PORTFOLIO.md
+```
+
+The security portfolio connects 401/403/admin access tests with Prometheus screenshots and beginner-friendly security interpretation.
+
+## Metric Groups
+
+```text
+Agent behavior
+-> agent_tool_calls_total
+-> agent_tool_errors_total
+-> agent_retry_count_total
+-> agent_cost_tokens_total
+-> agent_external_api_calls_total
+-> agent_db_write_total
+
+Security / guardrail signals
+-> agent_policy_violation_total
+-> agent_approval_required_total
+
+Spring Security signals
+-> security_auth_failures_total
+-> security_access_denied_total
+
+Internal cost
+-> practice_api_sql_statements_total
+-> practice_api_request_duration_seconds
+-> practice_api_requests_total
+```
+
+## Suspicious Behavior PromQL
+
+```promql
+increase(agent_policy_violation_total[5m]) >= 1
+and
+increase(agent_retry_count_total[5m]) >= 3
+```
 
 ```promql
 increase(agent_tool_errors_total[5m])
-or
+and
 increase(agent_retry_count_total[5m])
 ```
-
-![tool error retry prometheus](docs/evidence/risk-patterns/2026-09-17-tool-error-retry-prometheus.png)
-
-```text
-Tool error and retry increased together.
-This indicates repeated calls to an unstable or failing tool.
-```
-
-## 7. External API + Policy Violation
-
-Scenario:
-
-```http
-POST /api/agent/risk-patterns/external-api-policy-violation
-```
-
-```json
-{
-  "userInput": "upload sensitive customer report to external api",
-  "toolName": "external-api"
-}
-```
-
-![external api policy violation postman](docs/evidence/risk-patterns/2026-09-17-external-api-policy-violation-postman.png)
-
-PromQL:
 
 ```promql
 increase(agent_external_api_calls_total[5m])
-or
+and
 increase(agent_policy_violation_total[5m])
 ```
 
-![external api policy violation prometheus](docs/evidence/risk-patterns/2026-09-17-external-api-policy-violation-prometheus.png)
+## Planned October NeMo Guardrails Extension
+
+This repository does not integrate NVIDIA NeMo Guardrails yet.
+
+The plan is:
 
 ```text
-External API call and policy violation were observed in the same time window.
-This pattern indicates that a risky agent request moved toward an external dependency.
+Learn NVIDIA NeMo Guardrails
+-> map each detected behavior pattern to a customized guardrail
+-> connect metrics and alerts to guardrail actions
+-> test detect -> block / approve / escalate flows
 ```
 
-## 8. Approval Required + Retry
-
-Scenario:
-
-```http
-POST /api/agent/risk-patterns/approval-required-retry
-```
-
-```json
-{
-  "userInput": "send customer report by email repeatedly",
-  "toolName": "email"
-}
-```
-
-![approval required retry postman](docs/evidence/risk-patterns/2026-09-17-approval-required-retry-postman.png)
-
-PromQL:
-
-```promql
-increase(agent_approval_required_total[5m])
-or
-increase(agent_retry_count_total[5m])
-```
-
-![approval required retry prometheus](docs/evidence/risk-patterns/2026-09-17-approval-required-retry-prometheus.png)
+Planned mappings:
 
 ```text
-Approval-required actions and retries increased together.
-This indicates repeated attempts near a human approval boundary.
+policy-violation-retry
+-> custom guardrail: stop repeated risky attempts and require human review
+
+tool-error-retry
+-> custom guardrail: limit retries and route to fallback handling
+
+external-api-policy-violation
+-> custom guardrail: block outbound access or require approval
+
+approval-required-retry
+-> custom guardrail: freeze action until explicit approval is recorded
 ```
 
-## 9. Three-Metric Risk Pattern
+## Guardrail-Ready Policy Checker
 
-PromQL:
+The Spring Boot implementation in this repository includes a mock policy checker that can later be replaced with a NeMo Guardrails adapter.
 
-```promql
-increase(agent_policy_violation_total[5m])
-or
-increase(agent_retry_count_total[5m])
-or
-increase(agent_tool_calls_total[5m])
-```
-
-![three metric policy violation retry tool calls](docs/evidence/risk-patterns/2026-09-17-three-metric-policy-violation-retry-tool-calls-prometheus.png)
-
-```text
-Policy violation, retry, and tool calls increased together.
-This is stronger than a single metric because it shows repeated risky behavior plus continued tool activity.
-```
-
-## 10. External Three-Metric Risk Pattern
-
-PromQL:
-
-```promql
-increase(agent_external_api_calls_total[5m])
-or
-increase(agent_policy_violation_total[5m])
-or
-increase(agent_tool_calls_total[5m])
-```
-
-![three metric external policy tool calls](docs/evidence/risk-patterns/2026-09-17-three-metric-external-policy-tool-calls-prometheus.png)
-
-```text
-External API activity, policy violation, and tool calls appeared in the same experiment set.
-This is useful evidence for future guardrail rules around external dependency access.
-```
-
-## Security Observability Evidence
-
-Security evidence is documented in detail in [SECURITY_PORTFOLIO.md](SECURITY_PORTFOLIO.md).
-
-![no auth 401](docs/evidence/security/2026-09-17-actuator-metrics-no-auth-401-postman.png)
-
-![security auth failures](docs/evidence/security/2026-09-17-security-auth-failures-prometheus.png)
-
-![user 403](docs/evidence/security/2026-09-17-actuator-metrics-user-403-postman.png)
-
-![security access denied](docs/evidence/security/2026-09-17-security-access-denied-prometheus.png)
-
-```text
-401 and 403 are not only blocked requests.
-They are security events that can be measured as Prometheus metrics.
-```
-
-## Implementation Source
+Implementation branch:
 
 ```text
 spring/guardrail-ready-policy-checker
 ```
 
-## Next Direction
+Current API:
+
+```http
+POST /api/agent/policy-check
+```
+
+Current flow:
+
+```text
+AgentPolicyCheckController
+-> AgentPolicyCheckService
+-> AgentMetricRecorder
+-> Prometheus / Grafana
+```
+
+Current mock decisions:
+
+```text
+search public policy documents
+-> ALLOWED
+
+delete all customer records
+-> DENIED
+
+send customer report by email
+-> APPROVAL_REQUIRED
+```
+
+Current metrics:
+
+```text
+agent_policy_check_total
+agent_policy_allowed_total
+agent_policy_violation_total
+agent_approval_required_total
+```
+
+Replacement point:
+
+```text
+Current:
+AgentPolicyCheckService -> mock if-based rules
+
+Future:
+AgentPolicyCheckService -> NVIDIA NeMo Guardrails adapter
+```
+
+## Agent Risk Decision Engine
+
+The next step is not only recording metrics.
+
+The backend now converts combined agent behavior signals into a risk decision:
 
 ```text
 metric collection
--> metric combination interpretation
--> risk decision API
--> DB history
--> incident prototype
--> future NVIDIA NeMo Guardrails adapter
+-> metric interpretation
+-> risk score
+-> risk level
+-> recommended action
+-> guardrail-ready decision
+```
+
+API:
+
+```http
+POST /api/agent/risk/analyze
+```
+
+Example request:
+
+```json
+{
+  "userInput": "upload sensitive customer report to external api repeatedly",
+  "toolName": "external-api",
+  "retryCount": 3,
+  "promptTokens": 120,
+  "completionTokens": 80,
+  "policyViolation": true,
+  "externalApiCall": true
+}
+```
+
+Example response:
+
+```json
+{
+  "decision": "HIGH_RISK_AGENT_BEHAVIOR",
+  "riskScore": 89,
+  "riskLevel": "HIGH",
+  "signals": [
+    "POLICY_VIOLATION",
+    "RETRY",
+    "EXTERNAL_API_CALL"
+  ],
+  "recommendedAction": "BLOCK_AND_ESCALATE",
+  "guardrailReady": true,
+  "historyId": 1,
+  "traceId": "generated-trace-id"
+}
+```
+
+Decision map:
+
+```text
+POLICY_VIOLATION + RETRY
+-> SUSPICIOUS_RETRY
+-> BLOCK
+
+POLICY_VIOLATION + EXTERNAL_API
+-> RISKY_EXTERNAL_ACCESS
+-> BLOCK_AND_ESCALATE
+
+POLICY_VIOLATION + RETRY + EXTERNAL_API
+-> HIGH_RISK_AGENT_BEHAVIOR
+-> BLOCK_AND_ESCALATE
+
+TOOL_ERROR + RETRY
+-> UNSTABLE_TOOL_LOOP
+-> DISABLE_TOOL_TEMPORARILY
+
+APPROVAL_REQUIRED + RETRY
+-> APPROVAL_BYPASS_RISK
+-> REQUIRE_APPROVAL
+```
+
+Recommended actions:
+
+```text
+ALLOW
+-> continue the agent request
+
+REQUIRE_APPROVAL
+-> pause execution until a human approves the action
+
+BLOCK
+-> block the risky request
+
+BLOCK_AND_ESCALATE
+-> block immediately and escalate as a high-risk event
+
+DISABLE_TOOL_TEMPORARILY
+-> stop using an unstable or repeatedly failing tool
+
+CREATE_INCIDENT
+-> create an incident record for operator review
+```
+
+PromQL examples:
+
+```promql
+increase(agent_policy_violation_total[5m])
+or
+increase(agent_retry_count_total[5m])
+or
+increase(agent_external_api_calls_total[5m])
+```
+
+```promql
+increase(agent_policy_violation_total[5m])
+and
+increase(agent_retry_count_total[5m])
+and
+increase(agent_external_api_calls_total[5m])
+```
+
+History:
+
+```text
+Each risk decision is saved to agent_risk_history.
+Prometheus shows behavior volume.
+DB history preserves the interpreted incident-like decision.
+```
+
+History APIs:
+
+```http
+GET /api/agent/risk/history
+GET /api/agent/risk/history?riskLevel=HIGH
+GET /api/agent/risk/history?decision=HIGH_RISK_AGENT_BEHAVIOR
+GET /api/agent/risk/summary
+```
+
+Why JPA history matters:
+
+```text
+Prometheus
+-> how many times did a signal increase?
+
+JPA / DB history
+-> which request received which risk decision?
+```
+
+This connects JPA and observability:
+
+```text
+AgentRiskHistory is not a simple CRUD table.
+It is an audit-like event record for AI agent risk decisions.
+```
+
+SQL examples:
+
+```sql
+select *
+from agent_risk_history
+order by created_at desc;
+```
+
+```sql
+select *
+from agent_risk_history
+where risk_level = 'HIGH'
+order by created_at desc;
+```
+
+```sql
+select decision, count(*)
+from agent_risk_history
+group by decision;
+```
+
+```sql
+select recommended_action, count(*)
+from agent_risk_history
+group by recommended_action;
+```
+
+Future NeMo connection:
+
+```text
+Current:
+AgentRiskDecisionService -> rule-based risk decision
+
+Future:
+AgentRiskDecisionService -> NeMo Guardrails adapter / policy runtime
+```
+
+## Project-Ready Backend Additions
+
+This branch turns the lab into a project-ready backend prototype.
+
+Implemented additions:
+
+```text
+1. Agent Run History
+-> agent_run_history records each analyzed agent run.
+
+2. Risk Score Calculation
+-> AgentRiskDecisionService calculates riskScore and riskLevel.
+
+3. Risk Pattern API
+-> POST /api/agent/risk/analyze converts behavior signals into a risk decision.
+
+4. Security Event History
+-> security_event_history records 401 authentication failures and 403 access denied events.
+
+5. Admin Dashboard API
+-> GET /api/admin/dashboard/summary
+-> GET /api/admin/dashboard/security-events
+
+6. Guardrail Adapter Interface
+-> GuardrailDecisionClient is the future replacement point for NeMo Guardrails.
+-> RuleBasedGuardrailDecisionClient is the current mock/rule-based implementation.
+
+7. Policy Rule Separation
+-> AgentRiskPolicyRule separates keyword-based policy rules from the service flow.
+
+8. Java 21 Virtual Thread Async Agent Job
+-> POST /api/agent/jobs returns a jobId immediately.
+-> The risk analysis runs on a Java 21 virtual thread.
+-> GET /api/agent/jobs/{jobId} returns PENDING, RUNNING, COMPLETED, or FAILED.
+
+9. Incident Prototype
+-> High-risk decisions create risk_incident records.
+-> Operators can acknowledge or resolve incidents.
+-> GET /api/incidents
+-> PATCH /api/incidents/{incidentId}/ack
+-> PATCH /api/incidents/{incidentId}/resolve
+```
+
+Backend map:
+
+```text
+JSON request
+-> DTO
+-> risk policy rules
+-> risk score / decision
+-> metric record
+-> JPA history save
+-> admin summary API
+-> future NeMo Guardrails adapter
+```
+
+This keeps the project aligned with the class requirements:
+
+```text
+Spring REST API
++ JPA / SQL history
++ business logic validation
++ Prometheus observability
++ security event tracking
++ React-ready JSON APIs
++ Java 21 virtual thread async jobs
++ incident response prototype
+```
+
+Async agent job APIs:
+
+```http
+POST /api/agent/jobs
+GET /api/agent/jobs/{jobId}
+GET /api/agent/jobs
+```
+
+Async flow:
+
+```text
+POST /api/agent/jobs
+-> save PENDING job
+-> return jobId
+-> run AgentRiskDecisionService on a virtual thread
+-> save COMPLETED or FAILED status
+-> frontend or Postman checks status by jobId
+```
+
+Why virtual threads fit this project:
+
+```text
+AI agent servers often wait for LLM APIs, external APIs, tool calls, and DB operations.
+Java 21 virtual threads make this waiting-heavy backend flow easier to model without making WebSocket the center of the project.
+```
+
+Frontend polling UI:
+
+```text
+docs/frontend/react-virtual-thread-job-polling.html
+```
+
+This UI demonstrates the class requirement of asynchronous API integration:
+
+```text
+button click
+-> POST async job request
+-> backend returns jobId before analysis is finished
+-> React starts polling every 1 second
+-> UI changes from PENDING to RUNNING to COMPLETED
+-> decision is displayed when the virtual thread finishes
+```
+
+## Architecture Explanation for Portfolio
+
+This project is built around one backend flow:
+
+```text
+AI agent request
+-> JSON contract
+-> Spring DTO
+-> risk decision service
+-> metric recording
+-> JPA history
+-> guardrail-ready response
+```
+
+The frontend is intentionally treated as a control surface.
+The important logic belongs to the backend.
+
+```text
+Frontend
+-> sends JSON
+-> displays the result
+
+Backend
+-> interprets risk
+-> records metrics
+-> saves history
+-> prepares guardrail action
+```
+
+### JSON to Backend Flow
+
+The request starts as JSON:
+
+```json
+{
+  "userInput": "upload sensitive customer report to external api repeatedly",
+  "toolName": "external-api",
+  "retryCount": 3,
+  "policyViolation": true,
+  "externalApiCall": true
+}
+```
+
+Spring maps that JSON into a request DTO:
+
+```text
+JSON key
+-> DTO field
+-> service input
+```
+
+The service then extracts behavior signals:
+
+```text
+POLICY_VIOLATION
+RETRY
+EXTERNAL_API_CALL
+TOOL_ERROR
+APPROVAL_REQUIRED
+DB_WRITE
+```
+
+These signals are converted into a backend risk decision:
+
+```text
+POLICY_VIOLATION + RETRY + EXTERNAL_API_CALL
+-> HIGH_RISK_AGENT_BEHAVIOR
+-> BLOCK_AND_ESCALATE
+```
+
+The final response is again returned as JSON:
+
+```json
+{
+  "decision": "HIGH_RISK_AGENT_BEHAVIOR",
+  "riskScore": 89,
+  "riskLevel": "HIGH",
+  "recommendedAction": "BLOCK_AND_ESCALATE",
+  "guardrailReady": true
+}
+```
+
+### Metric and History Separation
+
+This project separates metric observation from event history.
+
+```text
+Prometheus
+-> how many times did the signal happen?
+
+JPA / SQL history
+-> which request caused which risk decision?
+```
+
+Prometheus answers operational questions:
+
+```text
+Did policy violations increase?
+Did retries spike?
+Did external API calls happen near risky requests?
+```
+
+JPA history answers audit-style questions:
+
+```text
+What did the agent request?
+Which tool was involved?
+Which decision was made?
+Which action was recommended?
+When did it happen?
+```
+
+This means the system does not only observe behavior volume.
+It also preserves the interpreted risk event.
+
+### Why This Is Guardrail-Ready
+
+The current implementation uses rule-based policy checks.
+That is intentional.
+
+```text
+Current:
+GuardrailDecisionClient -> RuleBasedGuardrailDecisionClient
+
+Future:
+GuardrailDecisionClient -> NemoGuardrailsDecisionClient
+```
+
+The interface keeps the backend structure stable.
+When NVIDIA NeMo Guardrails is added later, the policy runtime can be replaced without changing the whole controller and API structure.
+
+Portfolio summary:
+
+```text
+This project converts raw AI agent behavior signals into backend risk decisions,
+records them as metrics and JPA history,
+and prepares the architecture for future guardrail enforcement.
+```
+
+## Portfolio Positioning
+
+This project is not a chatbot demo.
+
+It is a lab for:
+
+```text
+cost-aware AI backend observability
+agent behavior detection
+security event metrics
+guardrail-ready architecture
+human approval boundaries
+incident interpretation
+```
+
+The PM-level question:
+
+```text
+What behavior, cost, and risk should be visible before an AI agent is trusted with autonomy?
+```
+
+## Draft Legal Intake Extension
+
+The same decision-engine architecture is also used as a draft legal intake prototype.
+
+API:
+
+```http
+POST /api/legal/intake/analyze
+GET /api/legal/intake/history
+GET /api/legal/intake/summary
+```
+
+Draft request:
+
+```json
+{
+  "caseType": "civil",
+  "summary": "Contract deposit return dispute with transfer records and chat evidence.",
+  "claimPurpose": "deposit return",
+  "hasEvidence": true,
+  "hasDeadline": true,
+  "opponentKnown": true,
+  "damageAmountKnown": false,
+  "currentStage": "before_lawsuit",
+  "urgent": false
+}
+```
+
+Draft response:
+
+```json
+{
+  "decision": "READY_WITH_MISSING_AMOUNT",
+  "readinessScore": 80,
+  "readinessLevel": "HIGH",
+  "signals": [
+    "CASE_TYPE_PROVIDED",
+    "CLAIM_PROVIDED",
+    "EVIDENCE_EXISTS",
+    "DEADLINE_EXISTS",
+    "OPPONENT_KNOWN",
+    "STAGE_PROVIDED"
+  ],
+  "recommendedNextStep": "ORGANIZE_CLAIM_AMOUNT_AND_EVIDENCE_TIMELINE",
+  "ontologyDraft": true,
+  "historyId": 1,
+  "traceId": "generated-trace-id"
+}
+```
+
+The first draft ontology uses simple intake signals:
+
+```text
+case type
+claim purpose
+evidence exists
+deadline or limitation issue
+opponent known
+damage amount known
+current stage
+urgency
+```
+
+The portfolio point:
+
+```text
+AI agent risk decision:
+behavior signal -> risk score -> risk decision -> action -> history
+
+Legal intake readiness decision:
+intake signal -> readiness score -> case readiness decision -> next step -> history
 ```
