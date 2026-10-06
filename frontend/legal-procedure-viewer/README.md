@@ -2,6 +2,36 @@
 
 React frontend for the legal procedure API in the Spring Boot application.
 
+## Assignment implementation checklist
+
+| Requirement | Implementation | Status |
+| --- | --- | --- |
+| Spring Boot REST API | Legal procedure and checklist read APIs under `/api/legal/**` | Done |
+| React application | `legal-procedure-viewer` Vite + React app | Done |
+| React to Spring integration | `src/api/legalProcedureApi.js` separates HTTP request functions from UI components | Done |
+| Main screen | Legal procedure list with search and domain filter | Done |
+| Detail screen | Procedure detail and step display | Done |
+| Additional screen | Criminal supplementary-investigation checklist | Done |
+| Shared visual style | Common layout, buttons, panels, status styles in `src/styles.css` | Done |
+| Loading state | Loading message while an API request is pending | Done |
+| Error state | API failure message and retry action | Done |
+| Empty state | No-results message for an empty search or filter result | Done |
+| Security study | JWT login, public legal GET policy, protected AI API policy | Done |
+
+The project intentionally replaces the sample shopping-mall domain with a legal-procedure domain. The assignment's technical learning target is preserved:
+
+```text
+React screen
+-> API helper
+-> fetch request
+-> Spring REST Controller
+-> JSON response
+-> React state update
+-> screen rendering
+```
+
+The domain is legal procedure data because it matches the larger legal AI project. The reusable technical structure is the same as the sample CRUD application, while the screen content, search, checklist, and error states are customized for the intended service.
+
 ## Run
 
 Start the Spring Boot server on `http://localhost:8080`, then run:
