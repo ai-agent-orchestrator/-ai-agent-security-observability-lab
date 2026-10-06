@@ -13,6 +13,11 @@ import java.util.List;
 @Component
 public class NemoOutputGuardrailClient implements OutputGuardrailClient {
 
+    private static final int MAX_OUTPUT_LENGTH = 12_000;
+    private static final String LOCAL_POLICY_RAIL = "local output policy";
+    private static final String LOCAL_POLICY_MESSAGE =
+            "답변이 비어 있거나 허용된 길이를 초과했습니다.";
+
     private final RestClient restClient;
     private final MeterRegistry meterRegistry;
 
@@ -29,6 +34,15 @@ public class NemoOutputGuardrailClient implements OutputGuardrailClient {
     public OutputGuardrailResult check(String response) {
         Timer.Sample sample = Timer.start(meterRegistry);
         try {
+            if (response == null || response.isBlank() || response.length() > MAX_OUTPUT_LENGTH) {
+                Counter.builder("ai.output.rail.decisions")
+                        .tag("status", "BLOCKED")
+                        .tag("rail", LOCAL_POLICY_RAIL)
+                        .register(meterRegistry)
+                        .increment();
+                return new OutputGuardrailResult("BLOCKED", LOCAL_POLICY_MESSAGE, LOCAL_POLICY_RAIL);
+            }
+
             NemoCheckResponse result = restClient.post()
                     .uri("/v1/output-rails/check")
                     .contentType(MediaType.APPLICATION_JSON)

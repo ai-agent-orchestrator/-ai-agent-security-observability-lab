@@ -46,9 +46,9 @@ flow check legal output $output_text -> $output_safe
   $output_safe = ..."""
     Classify the assistant response for a legal procedure assistant.
 
-    Return False if the response gives a definitive legal conclusion or guarantee,
-    exposes secrets or personal data, instructs crime or violence, or is unrelated
-    to legal procedure and document support.
+    Return False if the response is empty or excessively long, gives a definitive
+    legal conclusion or guarantee, exposes secrets or personal data, instructs
+    crime or violence, or is unrelated to legal procedure and document support.
 
     Return True for cautious general legal information that recommends checking
     current law and consulting a qualified professional when needed.

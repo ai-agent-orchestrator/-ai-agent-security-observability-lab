@@ -22,6 +22,8 @@ public class AiService {
 
     private static final String FALLBACK_MESSAGE =
             "현재 요청을 안전하게 처리할 수 없습니다. 잠시 후 다시 시도하거나 전문가에게 상담받아 주세요.";
+    private static final String OUTPUT_POLICY_FALLBACK_MESSAGE =
+            "해당 답변은 제공할 수 없습니다. 일반적인 법률 정보만 안내하며, 구체적인 사건은 전문가 상담이 필요합니다.";
 
     private final InputGuardrailClient inputGuardrailClient;
     private final OutputGuardrailClient outputGuardrailClient;
@@ -62,7 +64,10 @@ public class AiService {
             if (!output.allowed()) {
                 metricRecorder.recordRequest("output_blocked", llm.model());
                 return AiChatResponse.fallback(
-                        output.content(), traceId, llm.model(), "OUTPUT_GUARDRAIL_BLOCKED");
+                        OUTPUT_POLICY_FALLBACK_MESSAGE,
+                        traceId,
+                        llm.model(),
+                        "OUTPUT_POLICY_BLOCKED");
             }
 
             metricRecorder.recordRequest("success", llm.model());

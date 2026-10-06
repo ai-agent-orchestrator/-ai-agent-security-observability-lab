@@ -99,6 +99,19 @@ Content-Type: application/json
 
 The LLM key is read only by Spring. React sends the JWT but never receives the provider key.
 
+When the output rail blocks a response, Spring returns a stable fallback contract:
+
+```json
+{
+  "answer": "해당 답변은 제공할 수 없습니다. 일반적인 법률 정보만 안내하며, 구체적인 사건은 전문가 상담이 필요합니다.",
+  "blocked": true,
+  "fallback": true,
+  "traceId": "...",
+  "model": "gpt-4o-mini",
+  "reason": "OUTPUT_POLICY_BLOCKED"
+}
+```
+
 ## Important boundary
 
 The authenticated Input Rail, Output Rail, and minimum `/api/ai/chat` integration are available. SSE is not implemented yet. When a rail blocks a request, or the LLM/Guardrails service is unavailable, the API returns a controlled fallback JSON response.
