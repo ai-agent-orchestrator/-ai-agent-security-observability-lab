@@ -1,6 +1,10 @@
 package com.ohgiraffers.handlermethod.config;
 
 import com.ohgiraffers.handlermethod.support.SecurityMetricRecorder;
+import com.ohgiraffers.handlermethod.security.JwtAuthenticationFilter;
+import com.ohgiraffers.handlermethod.security.JwtJsonAccessDeniedHandler;
+import com.ohgiraffers.handlermethod.security.JwtJsonAuthenticationEntryPoint;
+import com.ohgiraffers.handlermethod.security.JwtTokenProvider;
 import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,14 +15,24 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
 
     private final SecurityMetricRecorder securityMetricRecorder;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtJsonAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtJsonAccessDeniedHandler jwtAccessDeniedHandler;
 
-    public SecurityConfig(SecurityMetricRecorder securityMetricRecorder) {
+    public SecurityConfig(SecurityMetricRecorder securityMetricRecorder,
+                          JwtTokenProvider jwtTokenProvider,
+                          JwtJsonAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+                          JwtJsonAccessDeniedHandler jwtAccessDeniedHandler) {
         this.securityMetricRecorder = securityMetricRecorder;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
+        this.jwtAccessDeniedHandler = jwtAccessDeniedHandler;
     }
 
     @Bean
@@ -48,24 +62,43 @@ public class SecurityConfig {
     SecurityFilterChain applicationSecurity(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/legal/**").authenticated()
                         .requestMatchers("/api/**", "/h2-console/**").permitAll()
                         .anyRequest().permitAll())
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler(jwtAccessDeniedHandler))
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
+                        UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
     @Bean
-    InMemoryUserDetailsManager users() {
+    InMemoryUserDetailsManager users(org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         UserDetails admin = User.withUsername("admin")
-                .password("{noop}admin123")
+                .password(passwordEncoder.encode("admin123"))
                 .roles("ADMIN")
                 .build();
         UserDetails user = User.withUsername("user")
-                .password("{noop}user123")
+                .password(passwordEncoder.encode("user123"))
                 .roles("USER")
                 .build();
 
         return new InMemoryUserDetailsManager(admin, user);
+    }
+
+    @Bean
+    org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
+        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+    }
+
+    @Bean
+    org.springframework.security.authentication.AuthenticationManager authenticationManager(
+            org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration configuration
+    ) throws Exception {
+        return configuration.getAuthenticationManager();
     }
 }
