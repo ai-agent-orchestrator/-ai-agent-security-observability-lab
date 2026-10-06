@@ -3,9 +3,12 @@ package com.ohgiraffers.handlermethod.llm;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.List;
 
 @Component
@@ -14,16 +17,28 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
     private final RestClient restClient;
     private final String apiKey;
     private final String model;
+    private final int maxOutputTokens;
 
     public OpenAiCompatibleLlmClient(
-            RestClient.Builder builder,
             @Value("${llm.base-url}") String baseUrl,
             @Value("${llm.api-key}") String apiKey,
-            @Value("${llm.model}") String model
+            @Value("${llm.model}") String model,
+            @Value("${llm.max-output-tokens}") int maxOutputTokens,
+            @Value("${llm.request-timeout-ms}") long timeoutMs
     ) {
-        this.restClient = builder.baseUrl(baseUrl).build();
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofMillis(timeoutMs))
+                .build();
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+        requestFactory.setReadTimeout(Duration.ofMillis(timeoutMs));
+
+        this.restClient = RestClient.builder()
+                .baseUrl(baseUrl)
+                .requestFactory(requestFactory)
+                .build();
         this.apiKey = apiKey;
         this.model = model;
+        this.maxOutputTokens = maxOutputTokens;
     }
 
     @Override
@@ -38,6 +53,7 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new ChatCompletionRequest(
                         model,
+                        maxOutputTokens,
                         List.of(
                                 new Message("system", systemPrompt),
                                 new Message("user", userMessage)
@@ -62,7 +78,11 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
         );
     }
 
-    private record ChatCompletionRequest(String model, List<Message> messages) {
+    private record ChatCompletionRequest(
+            String model,
+            int max_completion_tokens,
+            List<Message> messages
+    ) {
     }
 
     private record Message(String role, String content) {

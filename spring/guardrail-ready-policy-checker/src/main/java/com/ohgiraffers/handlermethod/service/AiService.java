@@ -2,6 +2,7 @@ package com.ohgiraffers.handlermethod.service;
 
 import com.ohgiraffers.handlermethod.dto.AiChatRequest;
 import com.ohgiraffers.handlermethod.dto.AiChatResponse;
+import com.ohgiraffers.handlermethod.cost.AiCostControlService;
 import com.ohgiraffers.handlermethod.guardrail.InputGuardrailClient;
 import com.ohgiraffers.handlermethod.guardrail.InputGuardrailResult;
 import com.ohgiraffers.handlermethod.guardrail.OutputGuardrailClient;
@@ -29,20 +30,26 @@ public class AiService {
     private final OutputGuardrailClient outputGuardrailClient;
     private final LlmClient llmClient;
     private final AiMetricRecorder metricRecorder;
+    private final AiCostControlService costControlService;
     private final String systemPrompt;
+    private final String configuredModel;
 
     public AiService(
             InputGuardrailClient inputGuardrailClient,
             OutputGuardrailClient outputGuardrailClient,
             LlmClient llmClient,
             AiMetricRecorder metricRecorder,
-            @Value("${llm.system-prompt}") String systemPrompt
+            AiCostControlService costControlService,
+            @Value("${llm.system-prompt}") String systemPrompt,
+            @Value("${llm.model}") String configuredModel
     ) {
         this.inputGuardrailClient = inputGuardrailClient;
         this.outputGuardrailClient = outputGuardrailClient;
         this.llmClient = llmClient;
         this.metricRecorder = metricRecorder;
+        this.costControlService = costControlService;
         this.systemPrompt = systemPrompt;
+        this.configuredModel = configuredModel;
     }
 
     public AiChatResponse chat(AiChatRequest request) {
@@ -57,7 +64,26 @@ public class AiService {
                         input.content(), traceId, "none", "INPUT_GUARDRAIL_BLOCKED");
             }
 
-            LlmClient.LlmResponse llm = callLlm(input.content());
+            var reservation = costControlService
+                    .reserve(systemPrompt, input.content(), configuredModel);
+            if (reservation.isEmpty()) {
+                metricRecorder.recordRequest("cost_blocked", configuredModel);
+                return AiChatResponse.technicalFallback(
+                        "사용량 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.",
+                        traceId,
+                        configuredModel,
+                        "COST_LIMIT_EXCEEDED");
+            }
+
+            LlmClient.LlmResponse llm;
+            try {
+                llm = callLlm(input.content());
+                costControlService.recordActualUsage(
+                        reservation.get(), llm.promptTokens(), llm.completionTokens());
+            } catch (RuntimeException exception) {
+                costControlService.release(reservation.get(), "LLM_FAILURE");
+                throw exception;
+            }
             metricRecorder.recordTokens(llm.model(), llm.promptTokens(), llm.completionTokens());
 
             OutputGuardrailResult output = checkOutput(llm.content());
