@@ -10,10 +10,15 @@ import com.ohgiraffers.handlermethod.llm.LlmClient;
 import com.ohgiraffers.handlermethod.support.AiMetricRecorder;
 import com.ohgiraffers.handlermethod.support.TraceContext;
 import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import io.micrometer.core.instrument.Timer;
 
 @Service
 public class AiService {
+
+    private static final Logger log = LoggerFactory.getLogger(AiService.class);
 
     private static final String FALLBACK_MESSAGE =
             "현재 요청을 안전하게 처리할 수 없습니다. 잠시 후 다시 시도하거나 전문가에게 상담받아 주세요.";
@@ -40,20 +45,20 @@ public class AiService {
 
     public AiChatResponse chat(AiChatRequest request) {
         String traceId = TraceContext.currentTraceId();
-        var timer = metricRecorder.start();
+        Timer.Sample timer = metricRecorder.start();
 
         try {
-            InputGuardrailResult input = inputGuardrailClient.check(request.message());
+            InputGuardrailResult input = checkInput(request.message());
             if (!input.allowed()) {
                 metricRecorder.recordRequest("input_blocked", "none");
                 return AiChatResponse.fallback(
                         input.content(), traceId, "none", "INPUT_GUARDRAIL_BLOCKED");
             }
 
-            LlmClient.LlmResponse llm = llmClient.chat(systemPrompt, input.content());
+            LlmClient.LlmResponse llm = callLlm(input.content());
             metricRecorder.recordTokens(llm.model(), llm.promptTokens(), llm.completionTokens());
 
-            OutputGuardrailResult output = outputGuardrailClient.check(llm.content());
+            OutputGuardrailResult output = checkOutput(llm.content());
             if (!output.allowed()) {
                 metricRecorder.recordRequest("output_blocked", llm.model());
                 return AiChatResponse.fallback(
@@ -62,12 +67,76 @@ public class AiService {
 
             metricRecorder.recordRequest("success", llm.model());
             return AiChatResponse.success(output.content(), traceId, llm.model());
-        } catch (RuntimeException exception) {
+        } catch (PipelineFailure failure) {
             metricRecorder.recordRequest("fallback", "unknown");
+            log.warn("AI chat fallback traceId={} stage={} reason={}",
+                    traceId, failure.stage(), failure.reason());
             return AiChatResponse.technicalFallback(
-                    FALLBACK_MESSAGE, traceId, "unknown", exception.getClass().getSimpleName());
+                    FALLBACK_MESSAGE, traceId, "unknown", failure.reason());
         } finally {
             metricRecorder.stop(timer);
+        }
+    }
+
+    private InputGuardrailResult checkInput(String message) {
+        Timer.Sample timer = metricRecorder.start();
+        try {
+            InputGuardrailResult result = inputGuardrailClient.check(message);
+            metricRecorder.recordStage("input_guardrail", result.status());
+            return result;
+        } catch (RuntimeException exception) {
+            metricRecorder.recordFailure("input_guardrail", exception.getClass().getSimpleName());
+            throw new PipelineFailure("input_guardrail", "INPUT_GUARDRAIL_UNAVAILABLE", exception);
+        } finally {
+            metricRecorder.stopStage(timer, "input_guardrail");
+        }
+    }
+
+    private LlmClient.LlmResponse callLlm(String userMessage) {
+        Timer.Sample timer = metricRecorder.start();
+        try {
+            LlmClient.LlmResponse response = llmClient.chat(systemPrompt, userMessage);
+            metricRecorder.recordStage("llm", "success");
+            return response;
+        } catch (RuntimeException exception) {
+            metricRecorder.recordFailure("llm", exception.getClass().getSimpleName());
+            throw new PipelineFailure("llm", "LLM_UNAVAILABLE", exception);
+        } finally {
+            metricRecorder.stopStage(timer, "llm");
+        }
+    }
+
+    private OutputGuardrailResult checkOutput(String answer) {
+        Timer.Sample timer = metricRecorder.start();
+        try {
+            OutputGuardrailResult result = outputGuardrailClient.check(answer);
+            metricRecorder.recordStage("output_guardrail", result.status());
+            return result;
+        } catch (RuntimeException exception) {
+            metricRecorder.recordFailure("output_guardrail", exception.getClass().getSimpleName());
+            throw new PipelineFailure("output_guardrail", "OUTPUT_GUARDRAIL_UNAVAILABLE", exception);
+        } finally {
+            metricRecorder.stopStage(timer, "output_guardrail");
+        }
+    }
+
+    private static final class PipelineFailure extends RuntimeException {
+
+        private final String stage;
+        private final String reason;
+
+        private PipelineFailure(String stage, String reason, Throwable cause) {
+            super(cause);
+            this.stage = stage;
+            this.reason = reason;
+        }
+
+        private String stage() {
+            return stage;
+        }
+
+        private String reason() {
+            return reason;
         }
     }
 }

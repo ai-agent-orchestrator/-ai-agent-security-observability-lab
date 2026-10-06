@@ -24,6 +24,13 @@ public class AiMetricRecorder {
                 .register(meterRegistry));
     }
 
+    public void stopStage(Timer.Sample sample, String stage) {
+        sample.stop(Timer.builder("ai.chat.stage.duration")
+                .tag("stage", stage)
+                .description("AI chat pipeline stage duration")
+                .register(meterRegistry));
+    }
+
     public void recordRequest(String outcome, String model) {
         Counter.builder("ai.chat.requests")
                 .tag("outcome", outcome)
@@ -43,5 +50,21 @@ public class AiMetricRecorder {
                 .tag("model", model)
                 .register(meterRegistry)
                 .increment(Math.max(completionTokens, 0));
+    }
+
+    public void recordStage(String stage, String outcome) {
+        Counter.builder("ai.chat.stage")
+                .tag("stage", stage)
+                .tag("outcome", outcome)
+                .register(meterRegistry)
+                .increment();
+    }
+
+    public void recordFailure(String stage, String errorType) {
+        Counter.builder("ai.chat.errors")
+                .tag("stage", stage)
+                .tag("error", errorType)
+                .register(meterRegistry)
+                .increment();
     }
 }
