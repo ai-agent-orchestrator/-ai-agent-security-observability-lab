@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Legal Procedure Viewer</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #182230;
+      --muted: #667085;
+      --line: #d0d5dd;
+      --blue: #175cd3;
+      --blue-soft: #eff8ff;
+      --green: #067647;
+      --green-soft: #ecfdf3;
+      --yellow-soft: #fffaeb;
+      --red: #b42318;
+      --red-soft: #fff1f0;
+      --code: #101828;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, "Malgun Gothic", sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(1220px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 30px 0 46px;
+    }
+
+    header {
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 7px;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    header p {
+      margin: 0;
+      max-width: 940px;
+      color: var(--muted);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(330px, 430px) 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 18px 0 8px;
+      font-size: 15px;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input[type="text"],
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 11px;
+      color: var(--text);
+      background: #fff;
+      font: inherit;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 13px;
+      color: #fff;
+      background: var(--blue);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      color: var(--text);
+      background: #e7edf4;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .banner {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 14px;
+      background: var(--blue-soft);
+    }
+
+    .banner.loading {
+      background: var(--yellow-soft);
+    }
+
+    .banner.error {
+      border-color: #fecdca;
+      background: var(--red-soft);
+    }
+
+    .banner.success {
+      border-color: #abefc6;
+      background: var(--green-soft);
+    }
+
+    .banner strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .banner p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .procedure-list {
+      display: grid;
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    .procedure-button {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--text);
+      background: #fff;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .procedure-button.active {
+      border-color: var(--blue);
+      background: var(--blue-soft);
+    }
+
+    .procedure-button strong,
+    .detail-title strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .procedure-button span,
+    .detail-title span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: #eef2f6;
+      color: #344054;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      color: var(--muted);
+      text-align: center;
+      background: #f9fafb;
+    }
+
+    .step-list,
+    .form-list,
+    .edge-list {
+      display: grid;
+      gap: 10px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .step-card,
+    .form-card,
+    .edge-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .step-card p,
+    .form-card p {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    .checklist {
+      margin: 10px 0 0;
+      padding-left: 20px;
+      color: #344054;
+    }
+
+    pre {
+      min-height: 220px;
+      max-height: 420px;
+      overflow: auto;
+      border-radius: 8px;
+      padding: 14px;
+      background: var(--code);
+      color: #e4e7ec;
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .flow {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--muted);
+      background: #f9fafb;
+      font-size: 14px;
+    }
+
+    @media (max-width: 880px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>React Legal Procedure Viewer</h1>
+    <p>
+      Legal procedure DB -> Spring Boot API -> React list/detail viewer.
+      This page turns the legal procedure knowledge base into a usable frontend screen.
+    </p>
+  </header>
+  <div id="root"></div>
+</main>
+
+<script type="text/babel">
+  const { useEffect, useMemo, useState } = React;
+
+  const DEFAULT_API_BASE = "http://localhost:8080";
+  const DOMAIN_OPTIONS = ["ALL", "CIVIL", "CRIMINAL", "FAMILY", "ELECTRONIC_LITIGATION"];
+
+  function buildUrl(apiBase, path) {
+    return `${apiBase.replace(/\/$/, "")}${path}`;
+  }
+
+  async function fetchJson(url) {
+    /*
+       fetchJson 은 API 호출 공통 함수다.
+
+       React 화면:
+       fetchProcedures()
+
+       실제 HTTP:
+       GET http://localhost:8080/api/legal/procedures
+
+       response.ok 를 확인하는 이유:
+       fetch 는 404/500 이 와도 자동으로 catch 로 가지 않는다.
+       그래서 직접 실패 상태를 검사해서 throw 해준다.
+     */
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  function fetchProcedures(apiBase, domain) {
+    /*
+       목록 API 호출.
+
+       domain = ALL
+       -> GET /api/legal/procedures
+
+       domain = CIVIL
+       -> GET /api/legal/procedures?domain=CIVIL
+     */
+    const query = domain && domain !== "ALL" ? `?domain=${encodeURIComponent(domain)}` : "";
+    return fetchJson(buildUrl(apiBase, `/api/legal/procedures${query}`));
+  }
+
+  function fetchProcedureDetail(apiBase, code) {
+    /*
+       상세 API 호출.
+
+       code 예시:
+       civil-litigation
+
+       실제 요청:
+       GET /api/legal/procedures/civil-litigation
+
+       React Router를 쓰는 버전이라면 code 는 useParams()에서 꺼낼 값이다.
+       이 단일 HTML prototype 에서는 사용자가 목록에서 클릭한 code 를 state로 저장한다.
+     */
+    return fetchJson(buildUrl(apiBase, `/api/legal/procedures/${code}`));
+  }
+
+  function App() {
+    /*
+       App 이 이 viewer 전체의 컨테이너다.
+
+       핵심 state:
+       procedures      -> 서버에서 받은 절차 목록 원본
+       selectedCode    -> 사용자가 선택한 절차 code
+       detail          -> 선택한 절차의 상세 JSON
+       keyword/domain  -> 목록 필터 조건
+       status/error    -> loading/success/error 화면 상태
+     */
+    const [apiBase, setApiBase] = useState(DEFAULT_API_BASE);
+    const [domain, setDomain] = useState("ALL");
+    const [keyword, setKeyword] = useState("");
+    const [procedures, setProcedures] = useState([]);
+    const [selectedCode, setSelectedCode] = useState("");
+    const [detail, setDetail] = useState(null);
+    const [status, setStatus] = useState("idle");
+    const [detailStatus, setDetailStatus] = useState("idle");
+    const [error, setError] = useState(null);
+    const [detailError, setDetailError] = useState(null);
+    const [reloadTick, setReloadTick] = useState(0);
+
+    useEffect(() => {
+      /*
+         목록 화면 패턴.
+
+         화면이 처음 열리거나 domain/apiBase/reloadTick 이 바뀌면 목록을 다시 불러온다.
+
+         [] 가 아니라 [apiBase, domain, reloadTick] 인 이유:
+         domain 필터를 CIVIL -> CRIMINAL 로 바꾸면
+         새로운 조건으로 서버에 다시 요청해야 하기 때문이다.
+
+         reloadTick 은 Reload 버튼을 누를 때 숫자가 1씩 올라간다.
+         값이 바뀌면 useEffect 가 다시 실행된다.
+       */
+      let alive = true;
+
+      async function loadProcedures() {
+        try {
+          setStatus("loading");
+          setError(null);
+
+          const list = await fetchProcedures(apiBase, domain);
+
+          if (alive) {
+            setProcedures(list);
+            setStatus("success");
+
+            /*
+               domain 필터가 바뀌어서 기존 selectedCode 가 목록에 없을 수 있다.
+               그 경우 상세 패널을 비워서 잘못된 상세 표시를 막는다.
+             */
+            if (!list.some((item) => item.code === selectedCode)) {
+              setSelectedCode("");
+              setDetail(null);
+            }
+          }
+        } catch (e) {
+          if (alive) {
+            setError(e.message);
+            setStatus("error");
+          }
+        }
+      }
+
+      loadProcedures();
+
+      return () => {
+        alive = false;
+      };
+    }, [apiBase, domain, reloadTick]);
+
+    useEffect(() => {
+      /*
+         상세 화면 패턴.
+
+         selectedCode 는 React Router 버전의 useParams().code 와 같은 역할이다.
+
+         selectedCode 가 바뀌면:
+         GET /api/legal/procedures/{code}
+         를 다시 호출해서 새 상세를 가져온다.
+       */
+      if (!selectedCode) {
+        return;
+      }
+
+      let alive = true;
+
+      async function loadDetail() {
+        try {
+          setDetailStatus("loading");
+          setDetailError(null);
+
+          const data = await fetchProcedureDetail(apiBase, selectedCode);
+
+          if (alive) {
+            setDetail(data);
+            setDetailStatus("success");
+          }
+        } catch (e) {
+          if (alive) {
+            setDetailError(e.message);
+            setDetailStatus("error");
+          }
+        }
+      }
+
+      loadDetail();
+
+      return () => {
+        alive = false;
+      };
+    }, [apiBase, selectedCode]);
+
+    const filteredProcedures = useMemo(() => {
+      /*
+         filteredProcedures 는 state 가 아니라 계산 결과다.
+
+         procedures = 서버에서 받은 원본 state
+         keyword = 사용자가 입력한 검색어 state
+
+         filteredProcedures =
+         procedures 중 keyword 와 맞는 것만 골라낸 결과
+       */
+      const normalizedKeyword = keyword.trim().toLowerCase();
+
+      if (!normalizedKeyword) {
+        return procedures;
+      }
+
+      return procedures.filter((procedure) => {
+        return [
+          procedure.code,
+          procedure.domain,
+          procedure.title,
+          procedure.summary,
+          procedure.userRole
+        ].some((value) => String(value).toLowerCase().includes(normalizedKeyword));
+      });
+    }, [procedures, keyword]);
+
+    const selectedSummary = selectedCode || "none";
+
+    return (
+      <div className="layout">
+        <section>
+          <h2>Procedure List</h2>
+
+          <label htmlFor="apiBase">Spring Boot API Base URL</label>
+          <input
+            id="apiBase"
+            type="text"
+            value={apiBase}
+            onChange={(event) => setApiBase(event.target.value)}
+          />
+
+          <label htmlFor="domain">Domain Filter</label>
+          <select
+            id="domain"
+            value={domain}
+            onChange={(event) => setDomain(event.target.value)}
+          >
+            {DOMAIN_OPTIONS.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+
+          <label htmlFor="keyword">Search</label>
+          <input
+            id="keyword"
+            type="text"
+            value={keyword}
+            placeholder="civil, criminal, 소송, 보완수사..."
+            onChange={(event) => setKeyword(event.target.value)}
+          />
+
+          <div className="actions">
+            <button
+              type="button"
+              onClick={() => setReloadTick((value) => value + 1)}
+              disabled={status === "loading"}
+            >
+              Reload
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => {
+                setKeyword("");
+                setDomain("ALL");
+              }}
+            >
+              Reset filters
+            </button>
+          </div>
+
+          <StatusBanner
+            status={status}
+            successTitle="Procedure list loaded"
+            idleTitle="Waiting for API"
+            loadingTitle="Loading procedures..."
+            errorTitle="Procedure API failed"
+            message={
+              status === "success"
+                ? `${filteredProcedures.length} procedures visible. Selected: ${selectedSummary}`
+                : "Start the Spring Boot backend and load legal procedure data."
+            }
+            error={error}
+          />
+
+          <ProcedureList
+            status={status}
+            procedures={filteredProcedures}
+            selectedCode={selectedCode}
+            onSelect={setSelectedCode}
+          />
+        </section>
+
+        <section>
+          <h2>Procedure Detail</h2>
+
+          {!selectedCode && (
+            <div className="empty">
+              Select a legal procedure from the list.
+            </div>
+          )}
+
+          {selectedCode && (
+            <>
+              <StatusBanner
+                status={detailStatus}
+                successTitle="Procedure detail loaded"
+                idleTitle="Waiting for selection"
+                loadingTitle="Loading detail..."
+                errorTitle="Detail API failed"
+                message={
+                  detailStatus === "success"
+                    ? `Detail loaded for ${selectedCode}.`
+                    : "The viewer is calling GET /api/legal/procedures/{code}."
+                }
+                error={detailError}
+              />
+
+              {detailStatus === "success" && detail && (
+                <ProcedureDetail detail={detail} />
+              )}
+            </>
+          )}
+
+          <div className="flow">
+            <strong>Study flow</strong>
+            <br />
+            React list page -&gt; GET /api/legal/procedures -&gt; select code -&gt;
+            GET /api/legal/procedures/{"{code}"} -&gt; steps/forms/knowledgeGraphEdges -&gt; UI update
+          </div>
+
+          <h3>Raw Detail JSON</h3>
+          <pre>{detail ? JSON.stringify(detail, null, 2) : "No detail selected yet."}</pre>
+        </section>
+      </div>
+    );
+  }
+
+  function StatusBanner({ status, successTitle, idleTitle, loadingTitle, errorTitle, message, error }) {
+    const titleByStatus = {
+      idle: idleTitle,
+      loading: loadingTitle,
+      success: successTitle,
+      error: errorTitle
+    };
+
+    return (
+      <div className={`banner ${status}`}>
+        <strong>{titleByStatus[status] || idleTitle}</strong>
+        <p>{status === "error" ? error : message}</p>
+      </div>
+    );
+  }
+
+  function ProcedureList({ status, procedures, selectedCode, onSelect }) {
+    if (status === "loading") {
+      return <div className="empty">Loading legal procedure list...</div>;
+    }
+
+    if (status === "error") {
+      return <div className="empty">Could not load procedure list.</div>;
+    }
+
+    if (procedures.length === 0) {
+      return <div className="empty">No matching legal procedures.</div>;
+    }
+
+    return (
+      <div className="procedure-list">
+        {procedures.map((procedure) => (
+          <button
+            key={procedure.code}
+            type="button"
+            className={`procedure-button ${selectedCode === procedure.code ? "active" : ""}`}
+            onClick={() => onSelect(procedure.code)}
+          >
+            <strong>{procedure.title}</strong>
+            <span>{procedure.summary}</span>
+            <div className="pill-row">
+              <span className="pill">{procedure.domain}</span>
+              <span className="pill">{procedure.code}</span>
+              <span className="pill">{procedure.userRole}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  function ProcedureDetail({ detail }) {
+    return (
+      <article>
+        <div className="detail-title">
+          <strong>{detail.title}</strong>
+          <span>{detail.summary}</span>
+          <div className="pill-row">
+            <span className="pill">{detail.domain}</span>
+            <span className="pill">{detail.code}</span>
+            <span className="pill">{detail.userRole}</span>
+          </div>
+        </div>
+
+        <h3>Steps</h3>
+        <ul className="step-list">
+          {detail.steps.map((step) => (
+            <li key={step.stepCode} className="step-card">
+              <strong>{step.stepOrder}. {step.title}</strong>
+              <p>{step.description}</p>
+              <ul className="checklist">
+                {step.checklist.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+
+        <h3>Forms</h3>
+        <ul className="form-list">
+          {detail.forms.map((form) => (
+            <li key={form.formCode} className="form-card">
+              <strong>{form.title}</strong>
+              <p>{form.usageNote}</p>
+              <div className="pill-row">
+                <span className="pill">{form.formCode}</span>
+                <span className="pill">{form.fileType}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <h3>Knowledge Graph Edges</h3>
+        <ul className="edge-list">
+          {detail.knowledgeGraphEdges.map((edge) => (
+            <li key={edge} className="edge-card">{edge}</li>
+          ))}
+        </ul>
+      </article>
+    );
+  }
+
+  const root = ReactDOM.createRoot(document.getElementById("root"));
+  root.render(<App />);
+</script>
+</body>
+</html>
