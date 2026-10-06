@@ -14,3 +14,6 @@ rails:
   input:
     flows:
       - legal input policy
+  output:
+    flows:
+      - legal output policy

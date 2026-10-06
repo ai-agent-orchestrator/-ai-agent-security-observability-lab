@@ -70,4 +70,4 @@ The Spring adapter records `ai.input.rail.decisions`, `ai.input.rail.errors`, an
 
 ## Important boundary
 
-This commit adds the authenticated Input Rail integration point. It does not call the main LLM or implement SSE yet. The next AI chat step can call the LLM only after this endpoint returns an allowed result.
+The authenticated Input Rail integration point and a matching Output Rail check are now available. The project still does not call the main LLM or implement SSE. The future AI chat service should call the input rail before the LLM and the output rail after the LLM, then return a fallback response when either check is blocked.

@@ -27,6 +27,16 @@ class InputCheckResponse(BaseModel):
     rail: str | None = None
 
 
+class OutputCheckRequest(BaseModel):
+    messages: list[Message] = Field(min_length=1)
+
+
+class OutputCheckResponse(BaseModel):
+    status: str
+    content: str
+    rail: str | None = None
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     await rails.startup()
@@ -50,6 +60,20 @@ async def check_input(request: InputCheckRequest) -> InputCheckResponse:
     )
 
     return InputCheckResponse(
+        status=result.status.name,
+        content=result.content,
+        rail=result.rail,
+    )
+
+
+@app.post("/v1/output-rails/check", response_model=OutputCheckResponse)
+async def check_output(request: OutputCheckRequest) -> OutputCheckResponse:
+    result = await rails.check_async(
+        [message.model_dump() for message in request.messages],
+        rail_types=[RailType.OUTPUT],
+    )
+
+    return OutputCheckResponse(
         status=result.status.name,
         content=result.content,
         rail=result.rail,
