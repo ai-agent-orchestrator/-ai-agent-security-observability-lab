@@ -68,6 +68,37 @@ Expected response for an allowed message:
 
 The Spring adapter records `ai.input.rail.decisions`, `ai.input.rail.errors`, and `ai.input.rail.duration` through Micrometer.
 
+## AI chat endpoint
+
+The authenticated chat endpoint runs the complete minimum flow:
+
+```text
+POST /api/ai/chat
+  -> Input Rail
+  -> OpenAI-compatible LLM call
+  -> Output Rail
+  -> success or fallback JSON
+```
+
+Set the provider key in the Spring process environment before starting the app:
+
+```powershell
+$env:LLM_API_KEY = "your-provider-key"
+$env:LLM_MODEL = "gpt-4o-mini"
+```
+
+Request:
+
+```http
+POST http://localhost:8080/api/ai/chat
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+
+{"message":"내용증명 작성 절차를 알려줘"}
+```
+
+The LLM key is read only by Spring. React sends the JWT but never receives the provider key.
+
 ## Important boundary
 
-The authenticated Input Rail integration point and a matching Output Rail check are now available. The project still does not call the main LLM or implement SSE. The future AI chat service should call the input rail before the LLM and the output rail after the LLM, then return a fallback response when either check is blocked.
+The authenticated Input Rail, Output Rail, and minimum `/api/ai/chat` integration are available. SSE is not implemented yet. When a rail blocks a request, or the LLM/Guardrails service is unavailable, the API returns a controlled fallback JSON response.
