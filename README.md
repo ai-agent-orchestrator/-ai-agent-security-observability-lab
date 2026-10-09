@@ -2,6 +2,92 @@
 
 This repository is a security-focused lab for detecting suspicious AI agent behavior through custom metrics, Prometheus, Grafana, and future guardrail integration.
 
+## Result First: Postman Experiments
+
+This repository should be read as an experiment report first.
+
+```text
+Postman scenario
+-> Spring Boot custom metric
+-> Prometheus evidence
+-> backend risk interpretation
+-> guardrail-ready action
+```
+
+### 1. Three-Metric Incident Pattern
+
+```text
+policy violation
++ retry
++ tool calls
+= incident-like AI agent behavior
+```
+
+![three metric agent risk pattern](docs/evidence/risk-patterns/2026-09-17-three-metric-policy-violation-retry-tool-calls-prometheus.png)
+
+```text
+The agent crossed a policy boundary,
+retried near that boundary,
+and continued tool activity in the same experiment window.
+
+Action: BLOCK_AND_CREATE_INCIDENT
+```
+
+### 2. External API + Policy Violation
+
+```text
+external API access
++ policy violation
+= risky behavior moving toward an outside dependency
+```
+
+![external api policy violation](docs/evidence/risk-patterns/2026-09-17-external-api-policy-violation-prometheus.png)
+
+```text
+External API call and policy violation were observed in the same time window.
+This pattern indicates that a risky agent request moved toward an external dependency.
+
+Action: BLOCK_AND_ESCALATE
+```
+
+### 3. External API + Policy Violation + Tool Calls
+
+```text
+external API access
++ policy violation
++ tool calls
+= risky behavior moving outward while tools remain active
+```
+
+![external three metric risk pattern](docs/evidence/risk-patterns/2026-09-17-three-metric-external-policy-tool-calls-prometheus.png)
+
+```text
+The agent moved toward an external dependency,
+triggered a policy violation,
+and still produced tool activity.
+
+Action: BLOCK_AND_ESCALATE
+```
+
+### 4. Approval Required + Retry
+
+```text
+approval required
++ retry
+= repeated attempts near a human approval boundary
+```
+
+![approval required retry](docs/evidence/risk-patterns/2026-09-17-approval-required-retry-prometheus.png)
+
+```text
+APPROVAL_REQUIRED is a human control boundary.
+Repeated retries near that boundary should freeze the action until explicit approval is recorded.
+
+Action: REQUIRE_APPROVAL
+```
+
+## Implementation Overview
+
 It now contains executable Spring Boot code, not only notes:
 
 ```text

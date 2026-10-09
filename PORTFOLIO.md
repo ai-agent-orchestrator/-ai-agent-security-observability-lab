@@ -2,6 +2,161 @@
 
 This portfolio records the experiment evidence for an AI agent security observability lab.
 
+## Top Experiment Results
+
+This portfolio is built around one result:
+
+```text
+Single metrics show events.
+Metric combinations reveal risky AI agent behavior.
+```
+
+The strongest experiments are the combined-risk patterns below. These are the results that should be seen first because they came from hands-on Postman scenarios and Prometheus evidence.
+
+## 1. Three-Metric Incident Pattern
+
+```text
+policy violation
++ retry
++ tool calls
+= incident-like agent behavior
+```
+
+Evidence:
+
+![three metric policy risk](docs/evidence/risk-patterns/2026-09-17-three-metric-policy-violation-retry-tool-calls-prometheus.png)
+
+PromQL:
+
+```promql
+increase(agent_policy_violation_total[5m])
+or
+increase(agent_retry_count_total[5m])
+or
+increase(agent_tool_calls_total[5m])
+```
+
+Interpretation:
+
+```text
+The agent crossed a policy boundary,
+retried near that boundary,
+and continued tool activity in the same experiment window.
+```
+
+Guardrail-ready action:
+
+```text
+BLOCK_AND_CREATE_INCIDENT
+```
+
+## 2. External API + Policy Violation
+
+```text
+external API access
++ policy violation
+= risky behavior moving toward an outside dependency
+```
+
+Evidence:
+
+![external policy prometheus](docs/evidence/risk-patterns/2026-09-17-external-api-policy-violation-prometheus.png)
+
+PromQL:
+
+```promql
+increase(agent_external_api_calls_total[5m])
+or
+increase(agent_policy_violation_total[5m])
+```
+
+Interpretation:
+
+```text
+This is not just a failed request.
+It is a risky agent action approaching an external dependency while also triggering a policy violation.
+```
+
+Guardrail-ready action:
+
+```text
+BLOCK_AND_ESCALATE
+```
+
+## 3. External API + Policy Violation + Tool Calls
+
+```text
+external API access
++ policy violation
++ tool calls
+= risky behavior moving outward while tools remain active
+```
+
+Evidence:
+
+![three metric external risk](docs/evidence/risk-patterns/2026-09-17-three-metric-external-policy-tool-calls-prometheus.png)
+
+PromQL:
+
+```promql
+increase(agent_external_api_calls_total[5m])
+or
+increase(agent_policy_violation_total[5m])
+or
+increase(agent_tool_calls_total[5m])
+```
+
+Interpretation:
+
+```text
+The agent moved toward an external dependency,
+triggered a policy violation,
+and still produced tool activity.
+This is stronger than a simple denied request.
+```
+
+Guardrail-ready action:
+
+```text
+BLOCK_AND_ESCALATE
+```
+
+## 4. Approval Required + Retry
+
+```text
+approval required
++ retry
+= repeated attempts around human control
+```
+
+Evidence:
+
+![approval retry prometheus](docs/evidence/risk-patterns/2026-09-17-approval-required-retry-prometheus.png)
+
+PromQL:
+
+```promql
+increase(agent_approval_required_total[5m])
+or
+increase(agent_retry_count_total[5m])
+```
+
+Interpretation:
+
+```text
+APPROVAL_REQUIRED is not a normal error.
+It is a human approval boundary.
+Repeated retries near that boundary should freeze the action until explicit approval is recorded.
+```
+
+Guardrail-ready action:
+
+```text
+REQUIRE_APPROVAL
+```
+
+## Baseline Experiments
+
 Core thesis:
 
 ```text
